@@ -6,6 +6,7 @@ from graphql import (ExecutionContext, GraphQLFieldResolver,
 if TYPE_CHECKING:
     from new_graphene.fields.datatypes import Scalar
     from new_graphene.fields.helpers import ExplicitField, ImplicitField
+    from new_graphene.fields.interface import Interface
     from new_graphene.fields.objecttypes import ObjectType
     from new_graphene.schema import Schema
 
@@ -20,6 +21,8 @@ type TypeExplicitField = ExplicitField
 type TypeResolver[T= TypeAllTypes] = Callable[[str, str, str], T]
 
 type TypeObjectType = ObjectType
+
+type TypeInterface = Interface
 
 type TypeSchema = Schema
 

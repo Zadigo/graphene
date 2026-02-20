@@ -1,10 +1,10 @@
 import inspect
 from dataclasses import field, make_dataclass
-from typing import Annotated, Any, Mapping, Optional, Sequence
+from typing import Annotated, Any, List, Mapping, Optional, Sequence
 
 from new_graphene.exceptions import InvalidMetaOptionsError
-from new_graphene.fields.helpers import get_field_as
-from new_graphene.typings import TypeExplicitField, TypeField
+from new_graphene.fields.helpers import Field, get_field_as
+from new_graphene.typings import TypeExplicitField, TypeField, TypeInterface
 
 
 class BaseOptions:
@@ -14,7 +14,7 @@ class BaseOptions:
         self.description: str = None
 
         self.fields: Mapping[str, TypeExplicitField] = {}
-        self.interfaces: Sequence = []
+        self.interfaces: List[TypeInterface] = []
         self.accepted_keys = {'name', 'description', 'interfaces', 'abstract'}
 
         self._inner_model = None
@@ -33,7 +33,7 @@ class BaseOptions:
         if key in self.accepted_keys:
             setattr(self, key, value)
 
-    def filter_fields(self, namespace: Mapping[str, Any] | Sequence[tuple[str, Any]]) -> Mapping[str, TypeField]:
+    def filter_fields(self, namespace: Mapping[str, Any] | Sequence[tuple[str, Any]], sort: bool = False) -> Mapping[str, TypeField]:
         """Filters the fields from the provided namespace"""
         items = namespace.items() if isinstance(namespace, Mapping) else namespace
 
@@ -72,6 +72,12 @@ class BaseOptions:
         """Adds a field to the ObjectType"""
         self.fields[name] = field
 
+    def add_interface(self, interface: TypeInterface):
+        """Adds an interface to the ObjectType"""
+        fields = self.filter_fields(interface.__dict__)
+        for key, value in fields.items():
+            self.add_field(key, get_field_as(value, Field))
+
 
 class BaseObjectType(type):
     def __new__(cls, name: str, bases: tuple[type], namespace: dict, /, **kwds):
@@ -96,6 +102,14 @@ class BaseObjectType(type):
             base_options.check_meta_options(keys)
             for key, value in user_meta.__dict__.items():
                 base_options.set_meta_option(key, value)
+
+        if getattr(klass, 'is_interface_type', False):
+            interfaces: Sequence[TypeInterface] = getattr(
+                user_meta, 'interfaces', []
+            )
+            base_options.interfaces.extend(interfaces)
+            for interface in interfaces:
+                base_options.add_interface(interface)
 
         # Dynamically create a dataclass for ObjectTypes to hold the field values,
         # only if the class is marked as an ObjectType. This allows us to have a
@@ -153,13 +167,6 @@ class BaseObjectType(type):
 
             print(dataclass)
 
-            interfaces = getattr(user_meta, 'interfaces', [])
-            for interface in interfaces:
-                continue
-                # if not isinstance(interface, Interface):
-                #     raise TypeError(
-                #         f"Expected interface to be an instance of Interface, got {type(interface).__name__}")
-
         klass.prepare(klass)
         return klass
 
@@ -172,6 +179,7 @@ class BaseType(BaseTypeMetaclass):
     # This is used to mark the class as an ObjectType,
     # so that the dataclass is created for it
     is_object_type: Annotated[bool, False] = False
+    is_interface_type: Annotated[bool, False] = False
 
     def __repr__(self):
         if self.is_object_type:

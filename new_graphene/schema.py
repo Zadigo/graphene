@@ -223,7 +223,6 @@ class TypesContainer(dict):
             self._translate_fields_to_graphql(graphene_type),
             interfaces=interfaces,
             is_type_of=None,
-            interfaces=interfaces(),
             description=graphene_type._meta.description
         )
 
