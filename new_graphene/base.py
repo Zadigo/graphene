@@ -71,6 +71,7 @@ class BaseOptions:
         """Adds a field to the ObjectType"""
         self.fields[name] = field
 
+
 class BaseObjectType(type):
     def __new__(cls, name: str, bases: tuple[type], namespace: dict, /, **kwds):
         klass = super().__new__(cls, name, bases, namespace, **kwds)
@@ -143,7 +144,7 @@ class BaseObjectType(type):
                 is_abstract = getattr(obj_meta, 'abstract', False)
                 if not is_abstract:
                     raise TypeError(error_message)
-                
+
                 for key, value in user_defined_fields.items():
                     base_options.add_field(key, get_field_as(value, Field))
 

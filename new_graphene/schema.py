@@ -1,15 +1,17 @@
+import functools
 import inspect
 from typing import Any, Optional, Sequence
+from xmlrpc.client import Boolean
 
-from graphql import (GraphQLBoolean, GraphQLFloat, GraphQLID, GraphQLInt,
+from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
+                     GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
                      GraphQLObjectType, GraphQLScalarType, GraphQLSchema,
                      GraphQLString)
 from graphql import graphql as agraphql
 from graphql import graphql_sync
 
 from new_graphene.exceptions import GrapheneObjectTypeError
-from new_graphene.fields.datatypes import (ID, Boolean, Float, Integer, Scalar,
-                                           String)
+from new_graphene.fields.datatypes import ID, Float, Integer, Scalar, String
 from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.grapqltypes import (GrapheneGraphqlObjectType,
                                       GrapheneGraphqlScalarType)
@@ -18,15 +20,32 @@ from new_graphene.typings import (TypeGraphqlExecuteOptions, TypeObjectType,
 from new_graphene.utils import TypesPrinterMixin
 
 
+def resolve_for_subscription(root, info, **arguments):
+    return root
+
+
 class TypesContainer(dict):
+    """A container for the types defined in the schema. This class is responsible 
+    for managing the types and ensuring that they are properly translated to their GraphQL 
+    counterparts when the schema is generated. It also provides methods for adding types to the
+    container and retrieving them as needed.
+
+    Args:
+        query (TypeObjectType, optional): The root query type for the schema. Defaults to None.
+        mutation (TypeObjectType, optional): The root mutation type for the schema. Defaults to None.
+        subscription (TypeObjectType, optional): The root subscription type for the schema. Defaults to None.
+        types (Sequence[TypeObjectType], optional): A list of additional types used in the schema. Defaults to None.
+        auto_camelcase (bool, optional): Whether to automatically convert field names to camel case. Defaults to True.
+    """
+
     def __init__(self, query: Optional[TypeObjectType] = None, mutation: Optional[TypeObjectType] = None, subscription: Optional[TypeObjectType] = None, types: Optional[Sequence[TypeObjectType]] = None, auto_camelcase: bool = True):
         _query = self._check_type(query)
         _mutation = self._check_type(mutation)
         _subscription = self._check_type(subscription)
 
-        self.query = self.new(_query)
-        self.mutation = self.new(_mutation)
-        self.subscription = self.new(_subscription)
+        self.query = self.add_to_self(_query)
+        self.mutation = self.add_to_self(_mutation)
+        self.subscription = self.add_to_self(_subscription)
 
         self._check_types(types)
         self.types = types or []
@@ -50,7 +69,104 @@ class TypesContainer(dict):
 
         return value
 
-    def new(self, value: TypeObjectType | None) -> Optional[TypeObjectType]:
+    def _get_function_for_type(self, value: TypeObjectType):
+        pass
+
+    # create_fields_for_type
+    def _translate_fields_to_graphql(self, graphene_type: TypeObjectType, is_input_field: bool = False):
+        """Translates the fields of a Graphene ObjectType to GraphQL fields. 
+        This involves iterating over the fields defined in the Graphene ObjectType, 
+        building the corresponding GraphQL field definitions, and handling any 
+        necessary conversions or mappings between the two representations. 
+        The resulting GraphQL fields are then returned as a dictionary that can be 
+        used to construct the GraphQL schema.
+
+        The resolvers for the fields are also wrapped to ensure that they are properly 
+        integrated with the GraphQL execution process. This may involve handling 
+        default resolvers, subscription resolvers, and any custom resolvers defined by the user.
+
+        .. code-block:: python
+            from new_graphene import ObjectType, String
+
+            class User(ObjectType):
+                name = String()
+
+                def resolve_name(self, info):
+                    return "John Doe"
+        """
+
+        _final_fields: dict[str, GraphQLField] = {}
+
+        for name, field_obj in graphene_type._meta.fields.items():
+            # if isinstance(value, Dynamic):
+            #     pass
+
+            field_type = self.add_to_self(field_obj.field_type)
+
+            if is_input_field:
+                _final_field = GraphQLInputField(
+                    field_type,
+                    description=field_obj.description,
+                    default_value=field_obj.default_value,
+                    deprecation_reason=field_obj.deprecation_reason
+                )
+            else:
+                # Build the GraphQl args
+                built_args = {}
+                for name, arg in field_obj.args.items():
+                    created_type = self.add_to_self(arg.field_type)
+                    arg_name = arg.name or self.get_name(name)
+                    built_args[arg_name] = GraphQLArgument(
+                        created_type,
+                        description=arg.description,
+                        default_value=arg.default_value,
+                        deprecation_reason=arg.deprecation_reason,
+                    )
+
+                subscribe = field_obj.wrap_subscribe(
+                    self._get_function_for_type(
+                        graphene_type,
+                        f"subscribe_{name}",
+                        name,
+                        field_obj.default_value
+                    )
+                )
+
+                default_field_resolver = resolve_for_subscription if subscribe else None
+
+                field_default_resolver = None
+                if issubclass(graphene_type, ObjectType):
+                    default_resolver = graphene_type._meta.default_resolver or default_resolver()
+                    field_default_resolver = functools.partial(
+                        default_resolver, name, field_obj.default_value)
+
+                partial_resolver = field_obj.wrap_resolve(
+                    self._get_function_for_type(
+                        graphene_type,
+                        f"resolve_{name}",
+                        name,
+                        field_obj.default_value
+                    ) or field_default_resolver
+                )
+
+                _final_field = GraphQLField(
+                    field_type,
+                    args=built_args,
+                    resolve=partial_resolver,
+                    subscribe=subscribe,
+                    description=field_obj.description,
+                    deprecation_reason=field_obj.deprecation_reason
+                )
+
+            field_name = field_obj.name or self.get_name(name)
+            _final_fields[field_name] = _final_field
+
+        return _final_fields
+
+    def _resolve_type(self, resolve_type_func, type_name, root, info, _type):
+        pass
+
+    def add_to_self(self, value: TypeObjectType | None) -> Optional[TypeObjectType]:
         if value is None:
             return value
 
@@ -66,16 +182,16 @@ class TypesContainer(dict):
             return result
 
         if issubclass(value, Scalar):
-            grapql_type = self.translate_to_grapql_scalar(value)
+            grapql_type = self.translate_scalar_to_grapql(value)
         elif issubclass(value, ObjectType):
-            pass
+            grapql_type = self.translate_objecttype_to_grapql(value)
         else:
             raise GrapheneObjectTypeError(value)
 
         self[name] = value
         return value
 
-    def translate_to_grapql_scalar(self, value: TypeScalar):
+    def translate_scalar_to_grapql(self, value: TypeScalar):
         scalars: dict[TypeScalar, GraphQLScalarType] = {
             String: GraphQLString,
             Integer: GraphQLInt,
@@ -97,14 +213,28 @@ class TypesContainer(dict):
             parse_value=parse_value,
             parse_literal=parse_literal
         )
-    
-    def translate_to_grapql_objecttype(self, graphene_type: TypeObjectType):
+
+    def translate_objecttype_to_grapql(self, graphene_type: TypeObjectType):
+        def interfaces():
+            return []
+
         return GrapheneGraphqlObjectType(
-            graphene_type,
-            [],
-            name=graphene_type._meta.name,
+            graphene_type._meta.name,
+            self._translate_fields_to_graphql(graphene_type),
+            interfaces=interfaces,
+            is_type_of=None,
+            interfaces=interfaces(),
             description=graphene_type._meta.description
         )
+
+    def translate_union_to_grapql(self, graphene_type: TypeObjectType):
+        pass
+
+    def translate_interface_to_grapql(self, graphene_type: TypeObjectType):
+        pass
+
+    def translate_enum_to_grapql(self, graphene_type: TypeObjectType):
+        pass
 
 
 class Schema(TypesPrinterMixin):
@@ -129,17 +259,30 @@ class Schema(TypesPrinterMixin):
         mutation (TypeObjectType, optional): The root mutation type for the schema. Defaults to None.
         subscription (TypeObjectType, optional): The root subscription type for the schema. Defaults to None.
         types (Sequence[TypeObjectType], optional): A list of additional types used in the schema. Defaults to None.
+        directives (Sequence, optional): A list of directives used in the schema. Defaults to None. 
         auto_camelcase (bool, optional): Whether to automatically convert field names to camel case. Defaults to True.
     """
 
-    def __init__(self, query: Optional[TypeObjectType] = None, mutation: Optional[TypeObjectType] = None, subscription: Optional[TypeObjectType] = None, types: Optional[Sequence[TypeObjectType]] = None, auto_camelcase: bool = True):
+    def __init__(self, query: Optional[TypeObjectType] = None, mutation: Optional[TypeObjectType] = None, subscription: Optional[TypeObjectType] = None, types: Optional[Sequence[TypeObjectType]] = None, directives: Optional[Sequence] = None, auto_camelcase: bool = True):
         self.query = query
         self.mutation = mutation
         self.subscription = subscription
         self.types = types or []
         self.auto_camelcase = auto_camelcase
-        self._types_container: TypesContainer = TypesContainer()
-        self._graphql_schema = GraphQLSchema()
+        self._types_container: TypesContainer = TypesContainer(
+            query=query,
+            mutation=mutation,
+            subscription=subscription,
+            types=types,
+            auto_camelcase=auto_camelcase
+        )
+        self._graphql_schema = GraphQLSchema(
+            query=self._types_container.query,
+            mutation=self._types_container.mutation,
+            subscription=self._types_container.subscription,
+            types=self._types_container.types,
+            directives=directives
+        )
 
     def __str__(self) -> str:
         return self.print_schema(self)
@@ -204,6 +347,12 @@ class Schema(TypesPrinterMixin):
         """
         normalized_kwargs = self._normalize_kwargs(**kwargs)
         return agraphql(self._graphql_schema, *args, **normalized_kwargs)
+
+    def asubscribe(self, query, *args, **kwargs):
+        pass
+
+    def asubscribe(self, query, *args, **kwargs):
+        pass
 
     def asubscribe(self, query, *args, **kwargs):
         pass

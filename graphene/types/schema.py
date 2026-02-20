@@ -309,7 +309,8 @@ class TypeMap(dict):
                 field = get_field_as(field.get_type(self), _as=Field)
                 if not field:
                     continue
-            field_type = create_graphql_type(field.type)
+                
+            field_type = create_graphql_type(field.type)    
             if is_input_type:
                 _field = GraphQLInputField(
                     field_type,
