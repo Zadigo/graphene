@@ -16,8 +16,9 @@ class BaseOptions:
         self.fields: Mapping[str, TypeExplicitField] = {}
         self.interfaces: Sequence = []
         self.accepted_keys = {'name', 'description', 'interfaces', 'abstract'}
-        self._user_meta: Optional[type] = None
+
         self._inner_model = None
+        self._base_meta: Optional[type] = None
 
     def check_meta_options(self, keys: Sequence[str]):
         """Checks if the provided keys in the Meta class are valid options.
@@ -27,7 +28,7 @@ class BaseOptions:
         if invalid_keys:
             raise InvalidMetaOptionsError(invalid_keys, self.accepted_keys)
 
-    def set_meta_options(self, key: str, value: Any):
+    def set_meta_option(self, key: str, value: Any):
         """Sets the meta options based on the provided key and value."""
         if key in self.accepted_keys:
             setattr(self, key, value)
@@ -89,12 +90,12 @@ class BaseObjectType(type):
         # and process its options
         user_meta: type | None = namespace.pop('Meta', None)
         if user_meta is not None:
-            base_options._user_meta = user_meta
+            base_options._base_meta = user_meta
 
             keys = user_meta.__dict__.keys()
             base_options.check_meta_options(keys)
             for key, value in user_meta.__dict__.items():
-                base_options.set_meta_options(key, value)
+                base_options.set_meta_option(key, value)
 
         # Dynamically create a dataclass for ObjectTypes to hold the field values,
         # only if the class is marked as an ObjectType. This allows us to have a
