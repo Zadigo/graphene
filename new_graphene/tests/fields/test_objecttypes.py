@@ -16,8 +16,12 @@ class CarsWithMetaType(ObjectType):
         description = 'A type representing cars with meta information'
 
 
-class CarsTypeWithInteface:
+class CarsTypeWithInterface:
     pass
+
+
+class CartTypeWithImplicitField(ObjectType):
+    name = String(description='The name of the car')
 
 
 class TestObjectType(unittest.TestCase):
@@ -42,3 +46,9 @@ class TestObjectType(unittest.TestCase):
         self.assertIn('brand', CarsType._meta.fields)
         self.assertIsInstance(CarsType._meta.fields['name'], Field)
         self.assertIsInstance(CarsType._meta.fields['brand'], Field)
+
+    def test_implementation_implicit_field(self):
+        self.assertIn('name', CartTypeWithImplicitField._meta.fields)
+        self.assertIsInstance(
+            CartTypeWithImplicitField._meta.fields['name'], Field)
+        print(CartTypeWithImplicitField._meta.fields)

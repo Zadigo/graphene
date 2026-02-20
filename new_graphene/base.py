@@ -1,5 +1,8 @@
+import inspect
+from dataclasses import field, make_dataclass
 from typing import Annotated, Any, Mapping, Optional, Sequence
 
+from new_graphene.exceptions import InvalidMetaOptionsError
 from new_graphene.fields.helpers import get_field_as
 from new_graphene.typings import TypeExplicitField, TypeField
 
@@ -14,15 +17,15 @@ class BaseOptions:
         self.interfaces: Sequence = []
         self.accepted_keys = {'name', 'description', 'interfaces', 'abstract'}
         self._user_meta: Optional[type] = None
+        self._inner_model = None
 
     def check_meta_options(self, keys: Sequence[str]):
         """Checks if the provided keys in the Meta class are valid options.
-        Raises an AttributeError if any invalid keys are found."""
+        Raises an InvalidMetaOptionsError if any invalid keys are found."""
         _keys = filter(lambda key: not key.startswith('__'), keys)
         invalid_keys = set(_keys) - self.accepted_keys
         if invalid_keys:
-            raise AttributeError(
-                f"Invalid meta options: {', '.join(invalid_keys)}")
+            raise InvalidMetaOptionsError(invalid_keys, self.accepted_keys)
 
     def set_meta_options(self, key: str, value: Any):
         """Sets the meta options based on the provided key and value."""
@@ -54,13 +57,19 @@ class BaseOptions:
 
     def build_fields(self, namespace: Mapping[str, Any] | Sequence[tuple[str, Any]]):
         """Builds the fields for the ObjectType based on the provided namespace"""
+        from new_graphene.fields.helpers import Field
+
         user_defined_fields = self.filter_fields(namespace)
 
         for key, value in user_defined_fields.items():
-            field = get_field_as(value)
+            field = get_field_as(value, Field)
             if field is not None:
                 self.fields[key] = field
+        return self.fields
 
+    def add_field(self, name: str, field: TypeExplicitField):
+        """Adds a field to the ObjectType"""
+        self.fields[name] = field
 
 class BaseObjectType(type):
     def __new__(cls, name: str, bases: tuple[type], namespace: dict, /, **kwds):
@@ -86,12 +95,6 @@ class BaseObjectType(type):
             for key, value in user_meta.__dict__.items():
                 base_options.set_meta_options(key, value)
 
-            for interface in getattr(user_meta, 'interfaces', []):
-                continue
-                # if not isinstance(interface, Interface):
-                #     raise TypeError(
-                #         f"Expected interface to be an instance of Interface, got {type(interface).__name__}")
-
         # Dynamically create a dataclass for ObjectTypes to hold the field values,
         # only if the class is marked as an ObjectType. This allows us to have a
         # structured way to store field values and automatically generate methods
@@ -101,33 +104,61 @@ class BaseObjectType(type):
         # BaseOptions, but only
         from new_graphene.fields.helpers import Field
 
-        # if getattr(klass, 'is_object_type', False):
-        #     _dataclass_fields = []
-        #     for key, field_value in namespace.items():
-        #         if key.startswith('_'):
-        #             continue
-        #         default_value = None
-        #         if isinstance(field_value, Field):
-        #             default_value = field_value.default_value
-        #         _dataclass_fields.append(
-        #             (
-        #                 key,
-        #                 'typing.Any',
-        #                 field(default=default_value)
-        #             )
-        #         )
-        #     # dataclass = make_dataclass(name, _dataclass_fields, bases=())
-        #     _fields = []
-        #     for base in reversed(bases):
-        #         for name, value in base.__dict__.items():
-        #             if name in ['_meta', 'is_object_type']:
-        #                 continue
-        #             field_type = get_field_as(value, Field)
-        #             if not field_type:
-        #                 continue
-        #             _fields.append((name, field_type))
-        #         _fields = sorted(_fields, key=lambda f: f[1])
+        if getattr(klass, 'is_object_type', False):
+            filtered_fields = base_options.filter_fields(namespace)
 
+            if not filtered_fields:
+                return klass
+
+            base_options.build_fields(namespace)
+            _dataclass_fields = []
+
+            for key, obj_field in filtered_fields.items():
+                default_value = None
+
+                if isinstance(obj_field, Field):
+                    default_value = obj_field.default_value
+
+                _dataclass_fields.append(
+                    (
+                        key,
+                        'typing.Any',
+                        field(default=default_value)
+                    )
+                )
+
+            # If the class is a subclass of another ObjectType,
+            # we need to make sure to include the fields from the
+            # parent class as well
+            for base in reversed(bases):
+                error_message = f"Base class {base.__name__} must be marked as abstract to be inherited by {name}"
+                user_defined_fields = base_options.filter_fields(base.__dict__)
+                if not user_defined_fields:
+                    continue
+
+                obj_meta = getattr(base, 'Meta', None)
+                if obj_meta is None:
+                    raise TypeError(error_message)
+
+                is_abstract = getattr(obj_meta, 'abstract', False)
+                if not is_abstract:
+                    raise TypeError(error_message)
+                
+                for key, value in user_defined_fields.items():
+                    base_options.add_field(key, get_field_as(value, Field))
+
+            dataclass = make_dataclass(name, _dataclass_fields, bases=())
+
+            print(dataclass)
+
+            interfaces = getattr(user_meta, 'interfaces', [])
+            for interface in interfaces:
+                continue
+                # if not isinstance(interface, Interface):
+                #     raise TypeError(
+                #         f"Expected interface to be an instance of Interface, got {type(interface).__name__}")
+
+        klass.prepare(klass)
         return klass
 
 
@@ -140,9 +171,21 @@ class BaseType(BaseTypeMetaclass):
     # so that the dataclass is created for it
     is_object_type: Annotated[bool, False] = False
 
+    def __repr__(self):
+        if self.is_object_type:
+            return f"<ObjectType: {self._meta.name}>"
+        return f"<BaseType: {self._meta.name}>"
+
     @classmethod
     def create(cls, name: str, **kwargs):
         pass
 
     def prepare(self):
-        pass
+        """Finalizes the preparation of the ObjectType by setting 
+        the name and description if they are not already set."""
+        if self._meta.name is None:
+            self._meta.name = self.__name__
+
+        if self._meta is not None:
+            if self._meta.description is None and self.__doc__ is not None:
+                self._meta.description = inspect.cleandoc(self.__doc__)

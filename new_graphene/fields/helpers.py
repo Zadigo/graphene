@@ -4,7 +4,7 @@ from typing import Any, Mapping, Optional
 
 from graphene.utils.module_loading import import_string
 from new_graphene.fields.base import BaseField, source_resolver
-from new_graphene.typings import TypeField, TypeScalar
+from new_graphene.typings import TypeField, TypeResolver, TypeScalar
 
 
 def inspect_type(item: TypeField | Any):  # get_type
@@ -103,11 +103,6 @@ class ImplicitField(BaseField):  # UnmountedType
     """
     creation_counter = 1
 
-    def __init__(self, *args, counter: Optional[int] = None, **kwargs):
-        super().__init__(counter=counter)
-        self.args = args
-        self.kwargs = kwargs
-
     def __eq__(self, other: TypeField | Any) -> bool:
         truth_array = [
             isinstance(other, ImplicitField),
@@ -152,7 +147,7 @@ class Field(ExplicitField):
         **extra_args (Any, optional): Any additional arguments to mount on the field. This can be used to specify additional configuration options for the field, such as custom directives or extensions. These extra arguments will be passed through to the underlying GraphQL library when the schema is generated, allowing for advanced users to take advantage of features that may not be directly supported by the Field class itself.
     """
 
-    def __init__(self, field_type: TypeScalar, args: Mapping[str, Any] = None, resolver=None, source=None, deprecation_reason=None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None, default_value: TypeScalar = None, **extra_args):
+    def __init__(self, field_type: TypeScalar, args: Mapping[str, Any] = None, resolver: Optional[TypeResolver] = None, source: Optional[str] = None, deprecation_reason=None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None, default_value: TypeScalar = None, **extra_args):
         super().__init__(counter=creation_counter)
 
         if args is not None and not isinstance(args, Mapping):
@@ -182,6 +177,9 @@ class Field(ExplicitField):
 
         if source is not None:
             self.resolver = functools.partial(source_resolver, source)
+
+    def __repr__(self):
+        return f"<Field: {self.name or self.field_type._meta.name}>"
 
     def _get_type(self):
         return inspect_type(self.field_type)

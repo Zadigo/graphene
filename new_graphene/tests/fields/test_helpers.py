@@ -1,19 +1,30 @@
 import unittest
 
 from new_graphene.fields.datatypes import String
-from new_graphene.fields.helpers import (ExplicitField, Field, get_field_as,
-                                         inspect_type)
+from new_graphene.fields.helpers import (ExplicitField, Field, ImplicitField,
+                                         get_field_as, inspect_type)
+
+
+def return_resolver_input(root, info, input):
+    return input
 
 
 class TestExplicitField(unittest.TestCase):
     def test_implementation_mount(self):
         field = ExplicitField.mount(String(description="A string field"))
         self.assertIsInstance(field, ExplicitField)
-        print(field._get_type())
+        print(field)
+        # print(field._get_type())
 
 
 class TestImplicitField(unittest.TestCase):
-    pass
+    def test_implementation_without_resolver(self):
+        instance = ImplicitField()
+        print(instance)
+
+    def test_implementation_with_resolver(self):
+        instance = ImplicitField(resolver=return_resolver_input)
+        print(instance)
 
 
 class TestField(unittest.TestCase):

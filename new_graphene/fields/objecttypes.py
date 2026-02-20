@@ -36,7 +36,6 @@ class ObjectType(BaseType):
         print(person.name)  # Output: Alice
         print(person.age)   # Output: 30
 
-
     Meta class options (optional):
         name (str): Name of the GraphQL type (must be unique in schema). Defaults to class name.
         description (str): Description of the GraphQL type in the schema. Defaults to class docstring.
