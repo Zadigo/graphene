@@ -1,5 +1,7 @@
 import datetime
-from typing import Any
+from functools import total_ordering
+import functools
+from typing import Any, Mapping, Optional
 
 import graphql
 from graphql import Undefined
@@ -12,7 +14,127 @@ MAX_INT = 2147483647
 MIN_INT = -2147483648
 
 
-class Scalar[T](BaseType):
+def source_resolver(source: str, root, info, **args):
+    pass
+
+
+@total_ordering
+class BaseField:
+    creation_counter = 1
+
+    def __init__(self, counter: int = None):
+        self.creation_counter = counter or self.increase_counter()
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, BaseField):
+            return self.creation_counter == other.creation_counter
+        return NotImplemented
+
+    def __lt__(self, other: Any) -> bool:
+        if isinstance(other, BaseField):
+            return self.creation_counter < other.creation_counter
+        return NotImplemented
+
+    def __gt__(self, other: Any) -> bool:
+        if isinstance(other, BaseField):
+            return self.creation_counter > other.creation_counter
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash(self.creation_counter)
+
+    def increase_counter(self):
+        self.creation_counter += 1
+        return self.creation_counter
+
+    def reset_counter(self):
+        self.creation_counter = self.increase_counter()
+
+    def get_type(self):
+        raise NotImplementedError
+
+    def _mount_as(self, instance):
+        pass
+
+
+class ExplicitField(BaseField):
+    pass
+
+
+class ImplicitField(BaseField):
+    """An implicit field is a field that inherits from Graphene Type and
+    allows the class to be dynamically instanciated/mounted on an object type.
+
+    An exampmple of this behaviour would be:
+
+    .. code-block:: python
+
+        from new_graphene import ObjectType, String
+
+        class Cars(ObjectType):
+            name = String(description='The name of the car')
+
+    In this example, the String type is implicitly mounted as a Field on the Cars ObjectType. As opposed to:
+
+    .. code-block:: python
+
+        from new_graphene import ObjectType, Field, String
+
+        class Cars(ObjectType):
+            name = Field(String, description='The name of the car')
+
+    This class is not intended to be used directly, but is inherited by other types and 
+    streamlines their use in different contexts:
+
+    - Object Type
+    - Scalar Type
+    - Enum
+    - Interface
+    - Union
+
+    Args:
+        counter (int, optional): The creation counter for the field. If not provided, it will be automatically assigned.
+    """
+    creation_counter = 1
+
+    def __init__(self, *args, counter: Optional[int] = None, **kwargs):
+        super().__init__(counter=counter, *args, **kwargs)
+
+
+class Field(ExplicitField):
+    def __init__(self, field_type: str, args: Mapping[str, Any] = None, resolver=None, source=None, deprecation_reason=None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None, default_value=None, **extra_args):
+        super().__init__(counter=creation_counter)
+
+        if args is not None and not isinstance(args, Mapping):
+            raise TypeError(
+                f"Expected args to be a Mapping, got {type(args).__name__}")
+
+        if source is not None and resolver is not None:
+            raise ValueError(
+                "Cannot specify both 'source' and 'resolver' for a Field.")
+
+        if default_value is not None and callable(default_value):
+            raise ValueError(
+                "default_value cannot be a callable. Use a lambda or partial if you need lazy evaluation.")
+
+        if required:
+            pass
+
+        self.field_type = field_type
+        self.args = args or {}
+        self.resolver = resolver
+        self.deprecation_reason = deprecation_reason
+        self.name = name
+        self.description = description
+        self.required = required
+        self.default_value = default_value
+        self.extra_args = extra_args
+
+        if source is not None:
+            self.resolver = functools.partial(source_resolver, source)
+
+
+class Scalar[T](ImplicitField, BaseType):
     @staticmethod
     def parse_literal(ast: graphql.language.ast.ValueNode, variables=None) -> T:
         raise NotImplementedError(f"parse_literal not implemented")
@@ -95,7 +217,7 @@ class BigInteger(Scalar[int]):
             _value = int(float(value))
         except ValueError:
             pass
-        
+
         return _value
 
 
@@ -191,7 +313,6 @@ class DateTime(Scalar[str]):
         except ValueError:
             raise GraphQLError(
                 f"DateTime cannot represent value: {repr(value)}")
-
 
 
 class Time(Scalar[str]):
