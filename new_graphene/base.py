@@ -176,6 +176,19 @@ class BaseTypeMetaclass(metaclass=BaseObjectType):
 
 
 class BaseType(BaseTypeMetaclass):
+    """BaseType is the base class for all Graphene types in the library. It provides 
+    common functionality and serves as a foundation for ObjectTypes, Interfaces, and 
+    other Graphene types. The BaseType class is designed to be extended by specific 
+    GraphQL type classes, such as ObjectType and Interface, which will implement their 
+    own specific behavior while inheriting common features from BaseType.
+
+    Meta class options (optional):
+        * name (str): Name of the GraphQL type (must be unique in schema). Defaults to class name.
+        * description (str): Description of the GraphQL type in the schema. Defaults to class docstring.
+        * interfaces (Sequence[Interface]): A list of interfaces that the ObjectType implements. Only applicable to ObjectTypes.
+        * abstract (bool): If True, the type is marked as abstract and cannot be instantiated directly. This is useful for creating base types that are meant to beinherited by other types. Defaults to False.
+    """
+
     # This is used to mark the class as an ObjectType,
     # so that the dataclass is created for it
     is_object_type: Annotated[bool, False] = False

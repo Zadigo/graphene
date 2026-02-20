@@ -1,5 +1,5 @@
 from functools import total_ordering
-from typing import Any, Optional
+from typing import Any, Optional, Type
 
 MAX_INT = 2147483647
 
@@ -12,7 +12,7 @@ def source_resolver(source: str, root, info, **args):
 
 @total_ordering
 class BaseField:
-    creation_counter = 1
+    creation_counter: int = 1
 
     def __init__(self, *args, counter: Optional[int] = None, **kwargs):
         self.creation_counter = counter or self.increase_counter()
@@ -37,10 +37,10 @@ class BaseField:
     def __hash__(self) -> int:
         return hash(self.creation_counter)
 
-    def _get_type(self):  # Rename: get_field_type
+    def _get_type(self) -> Type:  # Rename: get_field_type
         raise NotImplementedError
 
-    def increase_counter(self):
+    def increase_counter(self) -> int:
         self.creation_counter += 1
         return self.creation_counter
 

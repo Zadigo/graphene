@@ -1,8 +1,10 @@
 import datetime
-from typing import Any
+from decimal import Decimal as PythonDecimal
+from typing import Any, Type
 
 import graphql
-from graphql import Undefined
+from graphql import (BooleanValueNode, FloatValueNode, IntValueNode,
+                     StringValueNode, Undefined, ValueNode)
 from graphql.error import GraphQLError
 
 from new_graphene.base import BaseType
@@ -13,49 +15,65 @@ MAX_INT = 2147483647
 MIN_INT = -2147483648
 
 
-class Scalar[T](ImplicitField, BaseType):
+class Scalar[T= Any](ImplicitField, BaseType):
     @staticmethod
-    def parse_literal(ast: graphql.language.ast.ValueNode, variables=None) -> T:
+    def parse_literal(node: ValueNode, variables=None) -> T:
         raise NotImplementedError(f"parse_literal not implemented")
 
     @staticmethod
     def resolve_value(value: Any) -> T:
         return value
-    
-    def _get_type(self):
+
+    def _get_type(self) -> Type[Scalar]:
         return self.__class__
 
 
 class Generic(Scalar[Any]):
+    """A generic scalar type that can represent any value. It will be translated 
+    to a GraphQL String, but it can accept any Python value."""
+
     @staticmethod
-    def parse_literal(ast: graphql.language.ast.ValueNode, variables=None):
-        match ast:
-            case graphql.language.ast.StringValueNode():
-                return ast.value
+    def parse_literal(node, variables=None):
+        match node:
+            case StringValueNode():
+                return node.value
             case graphql.language.ast.BooleanValueNode():
-                return ast.value
-            case graphql.language.ast.IntValueNode():
-                num = int(ast.value)
+                return node.value
+            case IntValueNode():
+                num = int(node.value)
                 if MIN_INT <= num <= MAX_INT:
                     return num
             case graphql.language.ast.FloatValueNode():
-                return float(ast.value)
+                return float(node.value)
             case graphql.language.ast.ListValueNode():
-                return [Generic.parse_literal(value) for value in ast.values]
+                return [Generic.parse_literal(value) for value in node.values]
             case graphql.language.ast.ObjectValueNode():
                 return {
                     field.name.value: Generic.parse_literal(field.value)
-                    for field in ast.fields
+                    for field in node.fields
                 }
             case _:
                 return None
 
 
 class Integer(Scalar[int]):
+    """Graphene Integer type which will be translated to a GraphQL Int. 
+    It is a 32-bit signed integer. Values outside this range will be rejected.
+
+    .. Note:: If you need to represent larger integers, consider using the BigInteger type instead.
+
+    .. code:: python
+
+        from new_graphene import ObjectType, Field, Integer
+
+        class Query(ObjectType):
+            age = Integer()
+    """
+
     @staticmethod
-    def parse_literal(ast, variables=None):
-        if isinstance(ast, graphql.language.ast.IntValueNode):
-            value = int(ast.value)
+    def parse_literal(node, variables=None):
+        if isinstance(node, IntValueNode):
+            value = int(node.value)
             if MIN_INT <= value <= MAX_INT:
                 return value
         return Undefined
@@ -77,10 +95,22 @@ class Integer(Scalar[int]):
 
 
 class BigInteger(Scalar[int]):
+    """Graphene BigInteger type which will be translated to a GraphQL Int. 
+    It can represent integers of arbitrary size, but be aware that some GraphQL 
+    implementations may not support it.
+
+    .. code:: python
+
+        from new_graphene import ObjectType, Field, Integer
+
+        class Query(ObjectType):
+            age = BigInteger()
+    """
+
     @staticmethod
-    def parse_literal(ast, variables=None):
-        if isinstance(ast, graphql.language.ast.IntValueNode):
-            return int(ast.value)
+    def parse_literal(node, variables=None):
+        if isinstance(node, IntValueNode):
+            return int(node.value)
         return Undefined
 
     @staticmethod
@@ -104,10 +134,20 @@ class BigInteger(Scalar[int]):
 
 
 class Float(Scalar[float]):
+    """Graphene Float type which will be translated to a GraphQL Float.
+
+    .. code:: python
+
+        from new_graphene import ObjectType, Field, Integer
+
+        class Query(ObjectType):
+            value = Float()
+    """
+
     @staticmethod
-    def parse_literal(ast, variables=None):
-        if isinstance(ast, (graphql.language.ast.FloatValueNode, graphql.language.ast.IntValueNode)):
-            return float(ast.value)
+    def parse_literal(node, variables=None):
+        if isinstance(node, (FloatValueNode, IntValueNode)):
+            return float(node.value)
         return Undefined
 
     @staticmethod
@@ -119,10 +159,20 @@ class Float(Scalar[float]):
 
 
 class String(Scalar[str]):
+    """Graphene String type which will be translated to a GraphQL String. 
+
+    .. code:: python
+
+        from new_graphene import ObjectType, Field, Integer
+
+        class Query(ObjectType):
+            name = String()
+    """
+
     @staticmethod
-    def parse_literal(ast, variables=None):
-        if isinstance(ast, graphql.language.ast.StringValueNode):
-            return ast.value
+    def parse_literal(node, variables=None):
+        if isinstance(node, StringValueNode):
+            return node.value
         return Undefined
 
     @staticmethod
@@ -133,26 +183,57 @@ class String(Scalar[str]):
 
 
 class Boolean(Scalar[bool]):
+    """Graphene Boolean type which will be translated to a GraphQL Boolean. 
+
+    .. code:: python
+
+        from new_graphene import ObjectType, Field, Integer
+
+        class Query(ObjectType):
+            is_active = Boolean()
+    """
+
     @staticmethod
-    def parse_literal(ast, variables=None):
-        if isinstance(ast, graphql.language.ast.BooleanValueNode):
-            return ast.value
+    def parse_literal(node, variables=None):
+        if isinstance(node, BooleanValueNode):
+            return node.value
         return Undefined
 
 
 class ID(Scalar[str]):
+    """Graphene ID type which will be translated to a GraphQL ID. 
+
+    .. code:: python
+
+        from new_graphene import ObjectType, Field, Integer
+
+        class Query(ObjectType):
+            id = ID()
+    """
+
     @staticmethod
-    def parse_literal(ast, variables=None):
-        if isinstance(ast, (graphql.language.ast.StringValueNode, graphql.language.ast.IntValueNode)):
-            return ast.value
+    def parse_literal(node, variables=None):
+        if isinstance(node, (StringValueNode, IntValueNode)):
+            return node.value
         return Undefined
 
 
 class Date(Scalar[str]):
+    """Graphene Date type which will be translated to a GraphQL String. 
+    It can represent dates in ISO 8601 format.
+
+    .. code:: python
+
+        from new_graphene import ObjectType, Field, Integer
+
+        class Query(ObjectType):
+            date = Date()
+    """
+
     @staticmethod
-    def parse_literal(ast, variables=None):
-        if isinstance(ast, graphql.language.ast.StringValueNode):
-            return ast.value
+    def parse_literal(node, variables=None):
+        if isinstance(node, StringValueNode):
+            return node.value
         return Undefined
 
     @staticmethod
@@ -173,10 +254,21 @@ class Date(Scalar[str]):
 
 
 class DateTime(Scalar[str]):
+    """Graphene DateTime type which will be translated to a GraphQL String. 
+    It can represent dates in ISO 8601 format.
+
+    .. code:: python
+
+        from new_graphene import ObjectType, Field, Integer
+
+        class Query(ObjectType):
+            date = DateTime()
+    """
+
     @staticmethod
-    def parse_literal(ast, variables=None):
-        if isinstance(ast, graphql.language.ast.StringValueNode):
-            return ast.value
+    def parse_literal(node, variables=None):
+        if isinstance(node, StringValueNode):
+            return node.value
         return Undefined
 
     @staticmethod
@@ -198,10 +290,21 @@ class DateTime(Scalar[str]):
 
 
 class Time(Scalar[str]):
+    """Graphene Time type which will be translated to a GraphQL String.
+    It can represent times in ISO 8601 format.
+
+    .. code:: python
+
+        from new_graphene import ObjectType, Field, Integer
+
+        class Query(ObjectType):
+            time = Time()
+    """
+
     @staticmethod
-    def parse_literal(ast, variables=None):
-        if isinstance(ast, graphql.language.ast.StringValueNode):
-            return ast.value
+    def parse_literal(node, variables=None):
+        if isinstance(node, StringValueNode):
+            return node.value
         return Undefined
 
     @staticmethod
@@ -228,3 +331,29 @@ class Time(Scalar[str]):
         except ValueError:
             raise GraphQLError(
                 f"Time cannot represent value: {repr(value)}")
+
+
+class Decimal(Scalar[str]):
+    """Graphene Decimal type which will be translated to a GraphQL String. 
+    It can represent decimal numbers with arbitrary precision.
+
+    .. code:: python
+
+        from new_graphene import ObjectType, Field, Integer
+
+        class Query(ObjectType):
+            price = Decimal()
+    """
+
+    @staticmethod
+    def parse_literal(node, variables=None):
+        if isinstance(node, (IntValueNode, StringValueNode)):
+            return node.value
+        return Undefined
+
+    @staticmethod
+    def resolve_value(value):
+        try:
+            return PythonDecimal(value)
+        except Exception:
+            return Undefined
