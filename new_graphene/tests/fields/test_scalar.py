@@ -1,6 +1,7 @@
 import unittest
+
 from new_graphene.base import BaseType
-from new_graphene.datatypes import Scalar, String
+from new_graphene.fields.datatypes import Scalar
 
 
 class TestScalar(unittest.TestCase):
@@ -15,4 +16,6 @@ class TestScalar(unittest.TestCase):
 
     def test_parse_literal(self):
         with self.assertRaises(NotImplementedError):
+            Scalar.parse_literal(None)
+            Scalar.parse_literal(None)
             Scalar.parse_literal(None)
