@@ -3,6 +3,7 @@ from dataclasses import field, make_dataclass
 from typing import Annotated, Any, List, Mapping, Optional, Sequence
 
 from new_graphene.exceptions import InvalidMetaOptionsError
+from new_graphene.fields.base import Field
 from new_graphene.fields.helpers import get_field_as
 from new_graphene.typings import TypeExplicitField, TypeField, TypeInterface
 
@@ -19,6 +20,7 @@ class BaseOptions:
 
         self._inner_model = None
         self._base_meta: Optional[type] = None
+        self._internal_name: Optional[str] = None
 
     def check_meta_options(self, keys: Sequence[str]):
         """Checks if the provided keys in the Meta class are valid options.
@@ -91,6 +93,7 @@ class BaseObjectType(type):
 
         base_options = BaseOptions(cls=klass)
         setattr(klass, '_meta', base_options)
+        base_options._internal_name = name
 
         # Extract the Meta class from the namespace
         # and process its options
@@ -211,4 +214,6 @@ class BaseType(BaseTypeMetaclass):
 
         if self._meta is not None:
             if self._meta.description is None and self.__doc__ is not None:
+                self._meta.description = inspect.cleandoc(self.__doc__)
+                self._meta.description = inspect.cleandoc(self.__doc__)
                 self._meta.description = inspect.cleandoc(self.__doc__)

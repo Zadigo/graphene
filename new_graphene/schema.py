@@ -5,9 +5,9 @@ from xmlrpc.client import Boolean
 
 from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
                      GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
-                     GraphQLObjectType, GraphQLResolveInfo, GraphQLScalarLiteralParser,
-                     GraphQLScalarType, GraphQLScalarValueParser,
-                     GraphQLSchema, GraphQLString)
+                     GraphQLObjectType, GraphQLResolveInfo,
+                     GraphQLScalarLiteralParser, GraphQLScalarType,
+                     GraphQLScalarValueParser, GraphQLSchema, GraphQLString)
 from graphql import graphql as agraphql
 from graphql import graphql_sync
 
@@ -19,7 +19,7 @@ from new_graphene.grapqltypes import (GrapheneGraphqlObjectType,
                                       GrapheneGraphqlScalarType)
 from new_graphene.typings import (TypeGraphqlExecuteOptions, TypeObjectType,
                                   TypeScalar)
-from new_graphene.utils import TypesPrinterMixin
+from new_graphene.utils.printing import PrintingMixin
 
 
 def resolve_for_subscription(root, info: GraphQLResolveInfo, **arguments):
@@ -248,7 +248,7 @@ class TypesContainer(dict):
         pass
 
 
-class Schema(TypesPrinterMixin):
+class Schema(PrintingMixin):
     """A schema can be defined as a class that contains the root types
     for the GraphQL schema, such as query, mutation, and subscription. It also can contain
     a list of additional types that are used in the schema. The Schema class is responsible
@@ -361,4 +361,3 @@ class Schema(TypesPrinterMixin):
 
     def asubscribe(self, query, *args, **kwargs):
         pass
-    

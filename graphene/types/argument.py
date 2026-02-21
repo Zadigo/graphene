@@ -118,3 +118,5 @@ def to_arguments(args, extra_args=None):
         arguments[arg_name] = arg
 
     return arguments
+    return arguments
+    return arguments

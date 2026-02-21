@@ -1,4 +1,3 @@
-
 import itertools
 from typing import Optional
 
@@ -45,17 +44,20 @@ class Argument(ExplicitField):
         deprecation_reason (str, optional): Setting this value indicates that the argument is deprecated and may provide instruction or reason on how for clients to proceed. Cannot be set if the argument is required (see spec).
         name (str, optional): The name of the argument. Defaults to parameter name.
         required (bool, optional): Indicates this argument as not null in the graphql schema. Same behavior as graphene.NonNull. Default False.
-        creation_counter (int, optional): The creation counter for the argument. If not provided, it will be automatically assigned.
+        counter (int, optional): The creation counter for the argument. If not provided, it will be automatically assigned.
     """
 
-    def __init__(self, field_type: TypeScalar, default_value: Optional[Any] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None):
-        super().__init__(creation_counter=creation_counter)
+    def __init__(self, field_type: TypeScalar, default_value: Optional[Any] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, required: bool = False, counter: Optional[int] = None):
+        super().__init__(field_type, counter=counter)
 
         self.field_type = field_type
         self.default_value = default_value
         self.deprecation_reason = deprecation_reason
         self.name = name
         self.required = required
+
+    def __repr__(self):
+        return self.print_argument(self)
 
     def __eq__(self, other: Any) -> bool:
         return all([
@@ -97,10 +99,12 @@ class Argument(ExplicitField):
                 )
 
             if instance is not None:
-                if not isinstance(value, Argument):
+                if not isinstance(instance, Argument):
                     raise ValueError(f'Unknown argument "{key}".')
 
-                default_name = key or instance.name
+                default_name = instance.name or key
+                if instance.name is None:
+                    instance.name = default_name
 
                 if default_name in final_arguments:
                     raise ValueError(
@@ -109,5 +113,5 @@ class Argument(ExplicitField):
                 final_arguments[default_name] = instance
         return final_arguments
 
-    def _get_type(self):
-        return None
+    # def _get_type(self):
+    #     return None

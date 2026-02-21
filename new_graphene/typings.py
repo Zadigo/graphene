@@ -14,13 +14,15 @@ if TYPE_CHECKING:
 
 type TypeAllTypes = str | int | float | bool | Sequence | Mapping | None
 
-type TypeScalar[T = TypeAllTypes] = Scalar[T]
+type TypeScalar[T= TypeAllTypes] = Scalar[T]
 
 type TypeField = ExplicitField | ImplicitField
 
 type TypeExplicitField = ExplicitField
 
-type TypeResolver[T= TypeAllTypes] = Callable[[str, GraphQLResolveInfo, str], T]
+type TypeImplicitField = ImplicitField
+
+type TypeResolver[T = TypeAllTypes] = Callable[[str, GraphQLResolveInfo, str], T]
 
 type TypeObjectType = ObjectType
 
@@ -33,8 +35,9 @@ type TypeArgument = Argument
 type TypeGraphqlExecuteOptions = str | bool | Source | GraphQLFieldResolver | GraphQLTypeResolver | type[
     ExecutionContext] | Middleware | Mapping[str, Any]
 
-type TypeGraphqlExecuteKwargs[T= TypeGraphqlExecuteOptions] = Mapping[str, T]
+type TypeGraphqlExecuteKwargs[T = TypeGraphqlExecuteOptions] = Mapping[str, T]
 
-type TypeGraphqlExecuteArgs[T = TypeGraphqlExecuteOptions] = Sequence[T]
-type TypeGraphqlExecuteArgs[T = TypeGraphqlExecuteOptions] = Sequence[T]
-type TypeGraphqlExecuteArgs[T = TypeGraphqlExecuteOptions] = Sequence[T]
+type TypeGraphqlExecuteArgs[T= TypeGraphqlExecuteOptions] = Sequence[T]
+
+type TypeImports = TypeScalar | TypeArgument | TypeInterface | TypeObjectType | TypeField | TypeSchema | Callable[
+    ..., Any] | Any

@@ -16,6 +16,23 @@ MIN_INT = -2147483648
 
 
 class Scalar[T= Any](ImplicitField, BaseType):
+    """A scalar type represents a primitive value in GraphQL. It is used to define fields 
+    that return simple values such as strings, numbers, or booleans. Each specific scalar 
+    type (e.g., Integer, String, Boolean) will implement the parsing and resolution logic 
+    for that type.
+
+    As an `ImplicitField` it can then be used directly in `ObjectType` definitions without 
+    needing to be wrapped in a `Field`. For example:
+
+    .. code:: python
+        from new_graphene import ObjectType, Scalar
+
+        class Query(ObjectType):
+            age = Scalar()
+    """
+
+    is_scalar = True
+
     @staticmethod
     def parse_literal(node: ValueNode, variables: Optional[dict[str, Any]] = None) -> T:
         """Parse a GraphQL literal value into a Python value. This method should be
@@ -49,7 +66,15 @@ class Scalar[T= Any](ImplicitField, BaseType):
 
 class Generic(Scalar[Any]):
     """A generic scalar type that can represent any value. It will be translated 
-    to a GraphQL String, but it can accept any Python value."""
+    to a GraphQL String, but it can accept any Python value.
+
+    .. code:: python
+
+        from new_graphene import ObjectType, Generic
+
+        class Query(ObjectType):
+            age = Generic()
+    """
 
     @staticmethod
     def parse_literal(node, variables=None):
@@ -83,7 +108,7 @@ class Integer(Scalar[int]):
 
     .. code:: python
 
-        from new_graphene import ObjectType, Field, Integer
+        from new_graphene import ObjectType, Integer
 
         class Query(ObjectType):
             age = Integer()
@@ -120,7 +145,7 @@ class BigInteger(Scalar[int]):
 
     .. code:: python
 
-        from new_graphene import ObjectType, Field, Integer
+        from new_graphene import ObjectType, BigInteger
 
         class Query(ObjectType):
             age = BigInteger()
@@ -157,7 +182,7 @@ class Float(Scalar[float]):
 
     .. code:: python
 
-        from new_graphene import ObjectType, Field, Integer
+        from new_graphene import ObjectType, Float
 
         class Query(ObjectType):
             value = Float()
@@ -182,7 +207,7 @@ class String(Scalar[str]):
 
     .. code:: python
 
-        from new_graphene import ObjectType, Field, Integer
+        from new_graphene import ObjectType, String
 
         class Query(ObjectType):
             name = String()
@@ -206,7 +231,7 @@ class Boolean(Scalar[bool]):
 
     .. code:: python
 
-        from new_graphene import ObjectType, Field, Integer
+        from new_graphene import ObjectType, Boolean
 
         class Query(ObjectType):
             is_active = Boolean()
@@ -224,7 +249,7 @@ class ID(Scalar[str]):
 
     .. code:: python
 
-        from new_graphene import ObjectType, Field, Integer
+        from new_graphene import ObjectType, ID
 
         class Query(ObjectType):
             id = ID()
@@ -243,7 +268,7 @@ class Date(Scalar[str]):
 
     .. code:: python
 
-        from new_graphene import ObjectType, Field, Integer
+        from new_graphene import ObjectType, Date
 
         class Query(ObjectType):
             date = Date()
@@ -278,7 +303,7 @@ class DateTime(Scalar[str]):
 
     .. code:: python
 
-        from new_graphene import ObjectType, Field, Integer
+        from new_graphene import ObjectType, DateTime
 
         class Query(ObjectType):
             date = DateTime()
@@ -314,7 +339,7 @@ class Time(Scalar[str]):
 
     .. code:: python
 
-        from new_graphene import ObjectType, Field, Integer
+        from new_graphene import ObjectType, Time
 
         class Query(ObjectType):
             time = Time()
@@ -358,7 +383,7 @@ class Decimal(Scalar[str]):
 
     .. code:: python
 
-        from new_graphene import ObjectType, Field, Integer
+        from new_graphene import ObjectType, Decimal
 
         class Query(ObjectType):
             price = Decimal()

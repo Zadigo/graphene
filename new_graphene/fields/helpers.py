@@ -5,15 +5,16 @@ from typing import Any, Callable, Optional, Type
 
 from graphql import GraphQLResolveInfo
 
-from graphene.utils.module_loading import import_string
-from new_graphene.typings import TypeField
+from new_graphene.typings import TypeField, TypeScalar
+from new_graphene.utils.module_loading import import_string
+from new_graphene.utils.printing import PrintingMixin
 
 
-def inspect_type(item: TypeField | Callable[..., Any] | Any):  # get_type
+# get_type
+def inspect_type(item: TypeField | TypeScalar | Callable[..., Any] | Any):
     """Inspect the type of an item and return it. This function is 
-    used to resolve the type of a field, argument, or any other item 
-    that can be defined using either a string, a callable, 
-    or a direct instance."""
+    used to resolve the type of an item that can be defined by
+    a Python path string, a callable, or a direct instance."""
     if isinstance(item, str):
         return import_string(item)
 
@@ -33,17 +34,24 @@ def source_resolver(source: str, root, info: GraphQLResolveInfo, **arguments):
 
 
 @total_ordering
-class BaseField:
+class BaseField(PrintingMixin):
     """BaseField is the base class for all field types in the Graphene library. It is a container
     that saves information about the field, such as its type, resolver, and other configuration options.
 
     It provides common functionality and attributes that are shared across different field types, 
     such as ObjectType fields, ScalarType fields, Enum fields, Interface fields, and Union fields. 
     This class is not intended to be used directly, but is inherited by other types and streamlines
-    their use in different contexts."""
+    their use in different contexts.
+
+    Args:
+        *args: Positional arguments that can be passed to the field. These are typically used to define the type of the field and any additional configuration options.
+        **kwargs: Keyword arguments that can be passed to the field. These are typically used to define additional configuration options for the field, such as a resolver function, description, deprecation reason, etc.
+        counter (int, optional): The creation counter for the field. If not provided, it will be automatically assigned. This counter is used to maintain the order of field definitions, ensuring that fields are processed in the order they were defined in the class.
+    """
 
     creation_counter: int = 1
     is_mounted: bool = False
+    is_scalar: bool = False
 
     def __init__(self, *args, counter: Optional[int] = None, **kwargs):
         self.creation_counter = counter or self.increase_counter()
@@ -72,7 +80,8 @@ class BaseField:
     def __hash__(self) -> int:
         return hash(self.creation_counter)
 
-    def _get_type(self) -> Type:  # Rename: get_field_type
+    # TODO: Rename: get_field_type
+    def _get_type(self) -> Type:  # TypeScalar ??
         """Some fields might not have a type associated with them (e.g. ExplicitField),
         so this method should be implemented by the subclasses that require it. If a field does 
         not have a type, it should raise a NotImplementedError."""
@@ -113,6 +122,10 @@ class ExplicitField(BaseField):  # MountedType
 
     is_mounted: bool = True
 
+    def __init__(self, field_type: TypeScalar, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.field_type = field_type
+
     @classmethod
     def mount(cls, item: ImplicitField):
         """Creates a new instance of the ExplicitField class by mounting an ImplicitField. 
@@ -136,6 +149,9 @@ class ExplicitField(BaseField):  # MountedType
             *item.args,
             **kwargs
         )
+
+    def _get_type(self):
+        return self.field_type
 
 
 class ImplicitField(BaseField):  # UnmountedType
@@ -174,6 +190,9 @@ class ImplicitField(BaseField):  # UnmountedType
         counter (int, optional): The creation counter for the field. If not provided, it will be automatically assigned.
     """
 
+    def __repr__(self):
+        return self.print_implicit_field(self)
+
     def __eq__(self, other: TypeField | Any) -> bool:
         truth_array = [
             isinstance(other, ImplicitField),
@@ -189,7 +208,7 @@ class ImplicitField(BaseField):  # UnmountedType
         pass
 
     def _get_type(self):
-        pass
+        return self.__class__
 
     def mount_as_field(self):
         pass

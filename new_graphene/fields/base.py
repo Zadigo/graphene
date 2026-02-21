@@ -35,7 +35,7 @@ class Field(ExplicitField):
     """
 
     def __init__(self, field_type: TypeScalar, args: Mapping[str, Any] = None, resolver: Optional[TypeResolver] = None, source: Optional[str] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None, default_value: TypeScalar = None, **extra_args: Any):
-        super().__init__(counter=creation_counter)
+        super().__init__(field_type, counter=creation_counter)
 
         if args is not None and not isinstance(args, Mapping):
             raise TypeError(
