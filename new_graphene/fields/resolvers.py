@@ -1,17 +1,19 @@
 from typing import Callable
 
+from graphql import GraphQLResolveInfo
+
 from new_graphene.typings import TypeResolver
 
 
-def attribute_resolver(name: str, default_value, root, info, **arguments):
+def attribute_resolver(name: str, default_value, root, info: GraphQLResolveInfo, **arguments):
     return getattr(root, name, default_value)
 
 
-def dict_resolver(name: str, default_value, root, info, **arguments):
+def dict_resolver(name: str, default_value, root, info: GraphQLResolveInfo, **arguments):
     return root.get(name, default_value)
 
 
-def default_resolver(name: str, default_value, root, info, **arguments) -> Callable[..., TypeResolver]:
+def default_resolver(name: str, default_value, root, info: GraphQLResolveInfo, **arguments) -> Callable[..., TypeResolver]:
     """The default resolver function used by Graphene to resolve field values. 
     It first checks if the root object is a dictionary and attempts to retrieve the 
     value using the dict_resolver. If the root object is not a dictionary, 

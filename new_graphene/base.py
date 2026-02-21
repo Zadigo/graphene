@@ -194,10 +194,10 @@ class BaseType(BaseTypeMetaclass):
     is_object_type: Annotated[bool, False] = False
     is_interface_type: Annotated[bool, False] = False
 
-    def __repr__(self):
-        if self.is_object_type:
-            return f"<ObjectType: {self._meta.name}>"
-        return f"<BaseType: {self._meta.name}>"
+    # def __repr__(self):
+    #     if self.is_object_type:
+    #         return f"<ObjectType: {self._meta.name}>"
+    #     return f"<BaseType: {self._meta.name}>"
 
     @classmethod
     def create(cls, name: str, **kwargs):

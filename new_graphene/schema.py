@@ -5,14 +5,16 @@ from xmlrpc.client import Boolean
 
 from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
                      GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
-                     GraphQLObjectType, GraphQLScalarType, GraphQLSchema,
-                     GraphQLString)
+                     GraphQLObjectType, GraphQLScalarLiteralParser,
+                     GraphQLScalarType, GraphQLScalarValueParser,
+                     GraphQLSchema, GraphQLString)
 from graphql import graphql as agraphql
 from graphql import graphql_sync
 
 from new_graphene.exceptions import GrapheneObjectTypeError
 from new_graphene.fields.datatypes import ID, Float, Integer, Scalar, String
 from new_graphene.fields.objecttypes import ObjectType
+from new_graphene.fields.resolvers import default_resolver
 from new_graphene.grapqltypes import (GrapheneGraphqlObjectType,
                                       GrapheneGraphqlScalarType)
 from new_graphene.typings import (TypeGraphqlExecuteOptions, TypeObjectType,
@@ -136,9 +138,10 @@ class TypesContainer(dict):
 
                 field_default_resolver = None
                 if issubclass(graphene_type, ObjectType):
-                    default_resolver = graphene_type._meta.default_resolver or default_resolver()
+                    _resolver = graphene_type._meta.default_resolver or default_resolver()
                     field_default_resolver = functools.partial(
-                        default_resolver, name, field_obj.default_value)
+                        _resolver, name, field_obj.default_value
+                    )
 
                 partial_resolver = field_obj.wrap_resolve(
                     self._get_function_for_type(
@@ -203,8 +206,17 @@ class TypesContainer(dict):
         if value in scalars:
             return scalars[value]
 
-        parse_value = getattr(value, 'parse_value', None)
-        parse_literal = getattr(value, 'parse_literal', None)
+        parse_value: GraphQLScalarValueParser = getattr(
+            value,
+            'parse_value',
+            None
+        )
+
+        parse_literal: GraphQLScalarLiteralParser = getattr(
+            value,
+            'parse_literal',
+            None
+        )
 
         return GrapheneGraphqlScalarType(
             value,
@@ -349,15 +361,4 @@ class Schema(TypesPrinterMixin):
 
     def asubscribe(self, query, *args, **kwargs):
         pass
-
-    def asubscribe(self, query, *args, **kwargs):
-        pass
-
-    def asubscribe(self, query, *args, **kwargs):
-        pass
-
-    def asubscribe(self, query, *args, **kwargs):
-        pass
-
-    def asubscribe(self, query, *args, **kwargs):
-        pass
+    

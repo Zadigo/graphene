@@ -28,10 +28,13 @@ class ExplicitField(BaseField):  # MountedType
 
     .. code-block:: python
 
-        from new_graphene import ObjectType, Field, String
+        from new_graphene import ObjectType, ExplicitField, String
 
         class Cars(ObjectType):
-            name = Field(String, description='The name of the car')
+            name = ExplicitField(String, description='The name of the car')
+
+    The `Field` class inherits from `ExplicitField`, so it can be used as an explicit field which
+    allows it to be used as an explicit field on an object type.
 
     This class is not intended to be used directly, but is inherited by other types and
     streamlines their use in different contexts:
@@ -46,7 +49,7 @@ class ExplicitField(BaseField):  # MountedType
     @classmethod
     def mount(cls, item: ImplicitField):
         """Creates a new instance of the ExplicitField class by mounting an ImplicitField. 
-        This method is used to convert an implicit field into an explicit field when necessary, 
+        This method is used to convert an ImplicitField into an ExplicitField when necessary, 
         allowing for more control over the field's behavior and configuration.
 
         >>> from new_graphene import String
@@ -56,7 +59,9 @@ class ExplicitField(BaseField):  # MountedType
         """
         if not isinstance(item, ImplicitField):
             raise TypeError(
-                f"Expected an ImplicitField, got {type(item).__name__}")
+                "Expected an ImplicitField, "
+                f"got {type(item).__name__}"
+            )
 
         kwargs = item.kwargs | {'counter': item.creation_counter}
         return cls(
@@ -128,11 +133,18 @@ class ImplicitField(BaseField):  # UnmountedType
 
 
 class Field(ExplicitField):
-    """The `Field` class is used to define a field on an ObjectType 
-    in the GraphQL schema. It allows for more control over the field's behavior 
+    """The `Field` class is used explicitly to define a field on an ObjectType 
+    in the Graphene library. It allows for more control over the field's behavior 
     and configuration compared to implicit fields. The `Field` class can be used to 
     specify the type of the field, any arguments it may take, a resolver function, 
     and other options such as deprecation reason, description, and default value.
+
+    .. code-block:: python
+
+        from new_graphene import ObjectType, Field, String
+
+        class Cars(ObjectType):
+            name = Field(String, description='The name of the car')
 
     Args:
         field_type (TypeScalar): The type of the field in the GraphQL schema. This can be a scalar type, an object type, an enum, an interface, or a union.
@@ -178,8 +190,8 @@ class Field(ExplicitField):
         if source is not None:
             self.resolver = functools.partial(source_resolver, source)
 
-    def __repr__(self):
-        return f"<Field: {self.name or self.field_type._meta.name}>"
+    # def __repr__(self):
+    #     return f"<Field: {self.name or self.field_type._meta.name}>"
 
     def _get_type(self):
         return inspect_type(self.field_type)
@@ -209,3 +221,4 @@ def get_field_as(value: TypeField, mount_type: Optional[ExplicitField] = None):
         if mount_type is None:
             return value
         return mount_type.mount(value)
+    return None

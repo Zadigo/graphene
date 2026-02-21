@@ -1,6 +1,6 @@
 import datetime
 from decimal import Decimal as PythonDecimal
-from typing import Any, Type
+from typing import Any, Optional, Type
 
 import graphql
 from graphql import (BooleanValueNode, FloatValueNode, IntValueNode,
@@ -17,11 +17,30 @@ MIN_INT = -2147483648
 
 class Scalar[T= Any](ImplicitField, BaseType):
     @staticmethod
-    def parse_literal(node: ValueNode, variables=None) -> T:
+    def parse_literal(node: ValueNode, variables: Optional[dict[str, Any]] = None) -> T:
+        """Parse a GraphQL literal value into a Python value. This method should be
+        implemented by each specific scalar type to handle the parsing logic for that type.
+
+        This method is used in `GrapheneGraphqlScalarType.parse_literal` to convert GraphQL literals 
+        into Python values when processing queries.
+
+        :param node: The GraphQL AST node representing the literal value.
+        :param variables: Optional dictionary of variables that may be used in the parsing process.
+        :return: The parsed Python value corresponding to the GraphQL literal.
+        """
         raise NotImplementedError(f"parse_literal not implemented")
 
     @staticmethod
     def resolve_value(value: Any) -> T:
+        """Resolve a Python value into the appropriate type for this scalar. This method should be
+        implemented by each specific scalar type to handle the resolution logic for that type.
+
+        This method is used in `GrapheneGraphqlScalarType.serialize` to convert Python values
+        into a format suitable for GraphQL responses.
+
+        :param value: The Python value to be resolved.
+        :return: The resolved value in the appropriate format for this scalar type.
+        """
         return value
 
     def _get_type(self) -> Type[Scalar]:
