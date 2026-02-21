@@ -1,12 +1,14 @@
 from functools import total_ordering
 from typing import Any, Optional, Type
 
+from graphql import GraphQLResolveInfo
+
 MAX_INT = 2147483647
 
 MIN_INT = -2147483648
 
 
-def source_resolver(source: str, root, info, **arguments):
+def source_resolver(source: str, root, info: GraphQLResolveInfo, **arguments):
     pass
 
 
@@ -21,6 +23,7 @@ class BaseField:
     their use in different contexts."""
 
     creation_counter: int = 1
+    is_mounted: bool = False
 
     def __init__(self, *args, counter: Optional[int] = None, **kwargs):
         self.creation_counter = counter or self.increase_counter()
@@ -50,6 +53,9 @@ class BaseField:
         return hash(self.creation_counter)
 
     def _get_type(self) -> Type:  # Rename: get_field_type
+        """Some fields might not have a type associated with them (e.g. ExplicitField),
+        so this method should be implemented by the subclasses that require it. If a field does 
+        not have a type, it should raise a NotImplementedError."""
         raise NotImplementedError
 
     def increase_counter(self) -> int:

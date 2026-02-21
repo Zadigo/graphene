@@ -1,13 +1,13 @@
 import functools
 import inspect
-from typing import Any, Mapping, Optional
+from typing import Any, Callable, Mapping, Optional
 
 from graphene.utils.module_loading import import_string
 from new_graphene.fields.base import BaseField, source_resolver
 from new_graphene.typings import TypeField, TypeResolver, TypeScalar
 
 
-def inspect_type(item: TypeField | Any):  # get_type
+def inspect_type(item: TypeField | Callable[..., Any] | Any):  # get_type
     """Inspect the type of an item and return it. This function is 
     used to resolve the type of a field, argument, or any other item 
     that can be defined using either a string, a callable, 
@@ -45,6 +45,8 @@ class ExplicitField(BaseField):  # MountedType
     - Interface
     - Union
     """
+
+    is_mounted: bool = True
 
     @classmethod
     def mount(cls, item: ImplicitField):
@@ -106,7 +108,6 @@ class ImplicitField(BaseField):  # UnmountedType
     Args:
         counter (int, optional): The creation counter for the field. If not provided, it will be automatically assigned.
     """
-    creation_counter = 1
 
     def __eq__(self, other: TypeField | Any) -> bool:
         truth_array = [
@@ -159,33 +160,36 @@ class Field(ExplicitField):
         **extra_args (Any, optional): Any additional arguments to mount on the field. This can be used to specify additional configuration options for the field, such as custom directives or extensions. These extra arguments will be passed through to the underlying GraphQL library when the schema is generated, allowing for advanced users to take advantage of features that may not be directly supported by the Field class itself.
     """
 
-    def __init__(self, field_type: TypeScalar, args: Mapping[str, Any] = None, resolver: Optional[TypeResolver] = None, source: Optional[str] = None, deprecation_reason=None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None, default_value: TypeScalar = None, **extra_args):
+    def __init__(self, field_type: TypeScalar, args: Mapping[str, Any] = None, resolver: Optional[TypeResolver] = None, source: Optional[str] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None, default_value: TypeScalar = None, **extra_args: Any):
         super().__init__(counter=creation_counter)
 
         if args is not None and not isinstance(args, Mapping):
             raise TypeError(
-                f"Expected args to be a Mapping, got {type(args).__name__}")
+                f"Expected args to be a Mapping, got {type(args).__name__}"
+            )
 
         if source is not None and resolver is not None:
             raise ValueError(
-                "Cannot specify both 'source' and 'resolver' for a Field.")
+                "Cannot specify both 'source' and 'resolver' for a Field."
+            )
 
         if default_value is not None and callable(default_value):
             raise ValueError(
-                "default_value cannot be a callable. Use a lambda or partial if you need lazy evaluation.")
+                "default_value cannot be a callable. Use a lambda or partial if you need lazy evaluation."
+            )
 
         if required:
             pass
 
         self.field_type = field_type
         self.args = args or {}
+        self.extra_args = extra_args
         self.resolver = resolver
         self.deprecation_reason = deprecation_reason
         self.name = name
         self.description = description
         self.required = required
         self.default_value = default_value
-        self.extra_args = extra_args
 
         if source is not None:
             self.resolver = functools.partial(source_resolver, source)

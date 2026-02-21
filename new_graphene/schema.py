@@ -5,7 +5,7 @@ from xmlrpc.client import Boolean
 
 from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
                      GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
-                     GraphQLObjectType, GraphQLScalarLiteralParser,
+                     GraphQLObjectType, GraphQLResolveInfo, GraphQLScalarLiteralParser,
                      GraphQLScalarType, GraphQLScalarValueParser,
                      GraphQLSchema, GraphQLString)
 from graphql import graphql as agraphql
@@ -22,7 +22,7 @@ from new_graphene.typings import (TypeGraphqlExecuteOptions, TypeObjectType,
 from new_graphene.utils import TypesPrinterMixin
 
 
-def resolve_for_subscription(root, info, **arguments):
+def resolve_for_subscription(root, info: GraphQLResolveInfo, **arguments):
     return root
 
 

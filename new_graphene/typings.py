@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING, Any, Callable, Mapping, Sequence
 
 from graphql import (ExecutionContext, GraphQLFieldResolver,
-                     GraphQLTypeResolver, Middleware, Source)
+                     GraphQLResolveInfo, GraphQLTypeResolver, Middleware,
+                     Source)
 
 if TYPE_CHECKING:
     from new_graphene.fields.datatypes import Scalar
@@ -18,7 +19,7 @@ type TypeField = ExplicitField | ImplicitField
 
 type TypeExplicitField = ExplicitField
 
-type TypeResolver[T= TypeAllTypes] = Callable[[str, str, str], T]
+type TypeResolver[T= TypeAllTypes] = Callable[[str, GraphQLResolveInfo, str], T]
 
 type TypeObjectType = ObjectType
 
@@ -31,4 +32,6 @@ type TypeGraphqlExecuteOptions = str | bool | Source | GraphQLFieldResolver | Gr
 
 type TypeGraphqlExecuteKwargs[T= TypeGraphqlExecuteOptions] = Mapping[str, T]
 
+type TypeGraphqlExecuteArgs[T = TypeGraphqlExecuteOptions] = Sequence[T]
+type TypeGraphqlExecuteArgs[T = TypeGraphqlExecuteOptions] = Sequence[T]
 type TypeGraphqlExecuteArgs[T = TypeGraphqlExecuteOptions] = Sequence[T]

@@ -41,7 +41,7 @@ class TestBaseField(unittest.TestCase):
 
         field.increase_counter()
         self.assertEqual(field.creation_counter, 2)
-        
+
         field.reset_counter()
         self.assertEqual(field.creation_counter, 3)
 
@@ -72,7 +72,29 @@ class TestImplicitField(unittest.TestCase):
 
 
 class TestField(unittest.TestCase):
-    pass
+    def test_instance(self):
+        instance = Field(String, description="A string field")
+        self.assertIsNotNone(instance.description)
+        self.assertTrue(instance.creation_counter > 1)
+        self.assertIsNone(instance.name)
+
+    def test_all_arguments(self):
+        instance = Field(
+            String,
+            args={'input': String},
+            resolver=return_resolver_input,
+            deprecation_reason="Use another field",
+            name="testField",
+            description="A test field",
+            required=True,
+            default_value="default",
+            extra_args={'extra': 'value'}
+        )
+        self.assertIsNotNone(instance.description)
+        self.assertTrue(instance.creation_counter > 1)
+        self.assertEqual(instance.name, "testField")
+        self.assertTrue(callable(instance.resolver))
+        print(instance)
 
 
 class TestInspectType(unittest.TestCase):
