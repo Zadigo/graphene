@@ -1,7 +1,8 @@
+from new_graphene.fields.base import Field
 from new_graphene.fields.datatypes import ID, Integer, String
-from new_graphene.fields.helpers import Field
 from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.schema import Schema
+
 
 
 class Patron(ObjectType):

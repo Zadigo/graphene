@@ -3,7 +3,7 @@ from dataclasses import field, make_dataclass
 from typing import Annotated, Any, List, Mapping, Optional, Sequence
 
 from new_graphene.exceptions import InvalidMetaOptionsError
-from new_graphene.fields.helpers import Field, get_field_as
+from new_graphene.fields.helpers import get_field_as
 from new_graphene.typings import TypeExplicitField, TypeField, TypeInterface
 
 
@@ -58,7 +58,7 @@ class BaseOptions:
 
     def build_fields(self, namespace: Mapping[str, Any] | Sequence[tuple[str, Any]]):
         """Builds the fields for the ObjectType based on the provided namespace"""
-        from new_graphene.fields.helpers import Field
+        from new_graphene.fields.base import Field
 
         user_defined_fields = self.filter_fields(namespace)
 
@@ -118,7 +118,7 @@ class BaseObjectType(type):
         # e created with the name of the class and will inherit from any bases if necessary.
         # The fields for the dataclass will be determined based on the fields defined in the
         # BaseOptions, but only
-        from new_graphene.fields.helpers import Field
+        from new_graphene.fields.base import Field
 
         if getattr(klass, 'is_object_type', False):
             filtered_fields = base_options.filter_fields(namespace)

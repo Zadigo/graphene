@@ -2,8 +2,8 @@ import unittest
 
 from new_graphene.base import BaseOptions, BaseType, BaseTypeMetaclass
 from new_graphene.exceptions import InvalidMetaOptionsError
+from new_graphene.fields.base import Field
 from new_graphene.fields.datatypes import String
-from new_graphene.fields.helpers import Field
 from new_graphene.fields.objecttypes import ObjectType
 
 

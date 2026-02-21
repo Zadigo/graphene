@@ -4,14 +4,15 @@ from typing import Optional
 
 from typings import Any, Mapping, TypeScalar
 
-from new_graphene.fields.helpers import ExplicitField, Field, ImplicitField
+from new_graphene.fields.dynamic import Dynamic
+from new_graphene.fields.helpers import ExplicitField, ImplicitField
 
 
 class Argument(ExplicitField):
     """An argument is a special type of field that is used to define the arguments of a field in a 
     GraphQL schema. Arguments are defined using the `Argument` class, and can be used to specify the type, 
     default value, and other configuration options for the argument.
-    
+
     The `args` and `extra_args` parameters of the `Field` class can be used to specify the arguments for a field. 
     The `translate_arguments` class method is responsible for translating the provided arguments into 
     instances of the `Argument` class, which can then be used in the GraphQL schema.
@@ -68,24 +69,29 @@ class Argument(ExplicitField):
 
     @classmethod
     def translate_arguments(cls, args: Mapping[str, Any], extra_args: Optional[Mapping[str, Any]] = None) -> Mapping[str, 'Argument']:
+        from new_graphene.fields.base import Field
+        from new_graphene.fields.input import InputField
+
         sorted_extra_args = []
         if extra_args is not None:
             sorted_extra_args = sorted(extra_args.items(), key=lambda f: f[1])
 
-        args = itertools.chain(args.items(), sorted_extra_args)
+        all_args = itertools.chain(args.items(), sorted_extra_args)
 
         final_arguments = {}
 
-        for key, value in args:
-            # if isinstance(arg, Dynamic):
-            #     pass
+        for key, value in all_args:
+            if isinstance(value, Dynamic):
+                field_type = value._get_type()
+                if field_type is None:
+                    continue
 
             instance: Optional[Argument] = None
 
             if isinstance(value, ImplicitField):
                 instance = cls.mount(value)
 
-            if isinstance(value, (Field)):
+            if isinstance(value, (Field, InputField)):
                 raise ValueError(
                     f"Expected {key} to be Argument, but received {type(value).__name__}. Try using Argument({value.field_type})."
                 )
@@ -105,4 +111,3 @@ class Argument(ExplicitField):
 
     def _get_type(self):
         return None
-

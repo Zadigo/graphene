@@ -1,7 +1,8 @@
 import unittest
 
+from new_graphene.fields.base import Field
 from new_graphene.fields.datatypes import String
-from new_graphene.fields.helpers import Field, ImplicitField
+from new_graphene.fields.helpers import ImplicitField
 from new_graphene.fields.interface import Interface
 from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.schema import Schema
