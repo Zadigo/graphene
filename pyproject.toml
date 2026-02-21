@@ -16,6 +16,15 @@ dependencies = [
     "graphql-core (>=3.2.7,<4.0.0)",
     "graphql-relay (>=3.2.0,<4.0.0)"
 ]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.14",
+    "Framework :: Django"
+]
 
 [dependency-groups]
 dev = [
@@ -29,3 +38,16 @@ dev = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[project.urls]
+Homepage = "https://github.com/Zadigo/graphene"
+Documentation = "https://github.com/Zadigo/graphene/wiki"
+Repository = "https://github.com/Zadigo/graphene.git"
+Changelog = "https://github.com/Zadigo/graphene/blob/main/CHANGELOG.md"
+
+[tool.pyright]
+typeCheckingMode = "off"
+extraPaths = ["./new_graphene"]
+reportMissingImports = true
+enableReachabilityAnalysis = true
+reportUntypedBaseClass = true

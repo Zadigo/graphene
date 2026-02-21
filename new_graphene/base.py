@@ -1,24 +1,24 @@
 import inspect
 from dataclasses import field, make_dataclass
-from typing import Annotated, Any, List, Mapping, Optional, Sequence
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence
 
 from new_graphene.exceptions import InvalidMetaOptionsError
 from new_graphene.fields.base import Field
 from new_graphene.fields.helpers import get_field_as
-from new_graphene.typings import TypeExplicitField, TypeField, TypeInterface
+from new_graphene.typings import (TypeDataclass, TypeExplicitField, TypeField,
+                                  TypeInterface)
 
 
 class BaseOptions:
     def __init__(self, cls: type['BaseTypeMetaclass'], **kwargs):
         self.cls = cls
-        self.name: str = None
-        self.description: str = None
+        self.name: Optional[str] = None
+        self.description: Optional[str] = None
 
-        self.fields: Mapping[str, TypeExplicitField] = {}
+        self.fields: MutableMapping[str, TypeExplicitField] = {}
         self.interfaces: List[TypeInterface] = []
         self.accepted_keys = {'name', 'description', 'interfaces', 'abstract'}
 
-        self._inner_model = None
         self._base_meta: Optional[type] = None
         self._internal_name: Optional[str] = None
 
@@ -35,9 +35,9 @@ class BaseOptions:
         if key in self.accepted_keys:
             setattr(self, key, value)
 
-    def filter_fields(self, namespace: Mapping[str, Any] | Sequence[tuple[str, Any]], sort: bool = False) -> Mapping[str, TypeField]:
+    def filter_fields(self, namespace: Mapping[str, Any] | Sequence[tuple[str, Any]], sort: bool = False) -> MutableMapping[str, TypeField]:
         """Filters the fields from the provided namespace"""
-        items = namespace.items() if isinstance(namespace, Mapping) else namespace
+        items = namespace.items() if isinstance(namespace, MutableMapping) else namespace
 
         iternal_keys = {'_meta', 'is_object_type'}
         user_defined_fields = {}
@@ -167,8 +167,7 @@ class BaseObjectType(type):
                     base_options.add_field(key, get_field_as(value, Field))
 
             dataclass = make_dataclass(name, _dataclass_fields, bases=())
-
-            print(dataclass)
+            setattr(klass, 'dataclass_model', dataclass)
 
         klass.prepare(klass)
         return klass
@@ -194,13 +193,9 @@ class BaseType(BaseTypeMetaclass):
 
     # This is used to mark the class as an ObjectType,
     # so that the dataclass is created for it
-    is_object_type: Annotated[bool, False] = False
-    is_interface_type: Annotated[bool, False] = False
-
-    # def __repr__(self):
-    #     if self.is_object_type:
-    #         return f"<ObjectType: {self._meta.name}>"
-    #     return f"<BaseType: {self._meta.name}>"
+    is_object_type: bool = False
+    is_interface_type: bool = False
+    dataclass_model: Optional[TypeDataclass] = None
 
     @classmethod
     def create(cls, name: str, **kwargs):
@@ -209,11 +204,9 @@ class BaseType(BaseTypeMetaclass):
     def prepare(self):
         """Finalizes the preparation of the ObjectType by setting 
         the name and description if they are not already set."""
-        if self._meta.name is None:
-            self._meta.name = self.__name__
-
         if self._meta is not None:
+            if self._meta.name is None:
+                self._meta.name = self.__name__
+
             if self._meta.description is None and self.__doc__ is not None:
-                self._meta.description = inspect.cleandoc(self.__doc__)
-                self._meta.description = inspect.cleandoc(self.__doc__)
                 self._meta.description = inspect.cleandoc(self.__doc__)

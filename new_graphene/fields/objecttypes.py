@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from new_graphene.base import BaseType
 
 
@@ -44,5 +46,5 @@ class ObjectType(BaseType):
         default_resolver (Callable): Default resolver function for fields in this object type. If not provided, the default resolver will be used.
         fields (Dict[str, graphene.Field]): A dictionary of field names to Field instances. This is used to define the fields of the object type.
     """
-    
-    is_object_type = True
+
+    is_object_type: ClassVar[bool] = True

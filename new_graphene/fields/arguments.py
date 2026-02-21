@@ -1,10 +1,9 @@
 import itertools
-from typing import Optional
-
-from typings import Any, Mapping, TypeScalar
+from typing import Any, MutableMapping, Optional
 
 from new_graphene.fields.dynamic import Dynamic
 from new_graphene.fields.helpers import ExplicitField, ImplicitField
+from new_graphene.typings import TypeScalar
 
 
 class Argument(ExplicitField):
@@ -70,7 +69,7 @@ class Argument(ExplicitField):
         ])
 
     @classmethod
-    def translate_arguments(cls, args: Mapping[str, Any], extra_args: Optional[Mapping[str, Any]] = None) -> Mapping[str, 'Argument']:
+    def translate_arguments(cls, args: MutableMapping[str, Any], extra_args: Optional[MutableMapping[str, Any]] = None) -> MutableMapping[str, 'Argument']:
         from new_graphene.fields.base import Field
         from new_graphene.fields.input import InputField
 

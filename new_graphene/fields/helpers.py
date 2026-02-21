@@ -2,15 +2,17 @@ import functools
 import inspect
 from functools import total_ordering
 from typing import Any, Callable, Optional, Type
+from warnings import deprecated
 
 from graphql import GraphQLResolveInfo
 
-from new_graphene.typings import TypeField, TypeScalar
+from new_graphene.typings import TypeArgument, TypeField, TypeObjectType, TypeScalar
 from new_graphene.utils.module_loading import import_string
 from new_graphene.utils.printing import PrintingMixin
 
 
 # get_type
+@deprecated('We will be importing the items directly in _get_type instead of using this helper function.')
 def inspect_type(item: TypeField | TypeScalar | Callable[..., Any] | Any):
     """Inspect the type of an item and return it. This function is 
     used to resolve the type of an item that can be defined by
@@ -53,7 +55,7 @@ class BaseField(PrintingMixin):
     is_mounted: bool = False
     is_scalar: bool = False
 
-    def __init__(self, *args, counter: Optional[int] = None, **kwargs):
+    def __init__(self, *args: TypeArgument, counter: Optional[int] = None, **kwargs: TypeArgument):
         self.creation_counter = counter or self.increase_counter()
         self.args = args
         self.kwargs = kwargs
@@ -122,7 +124,7 @@ class ExplicitField(BaseField):  # MountedType
 
     is_mounted: bool = True
 
-    def __init__(self, field_type: TypeScalar, *args, **kwargs):
+    def __init__(self, field_type: TypeScalar | TypeObjectType, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.field_type = field_type
 
@@ -217,11 +219,9 @@ class ImplicitField(BaseField):  # UnmountedType
         pass
 
 
+@deprecated("This function will be renamed to 'mount_type_as'.")
 def get_field_as(value: TypeField, mount_type: Optional[ExplicitField] = None):
-    """Mount an implicit field as an explicit field if required, otherwise return 
-    the explicit field as is. This is useful for cases where we want to allow users 
-    to define fields using either the implicit or explicit syntax, but we want to 
-    ensure that we always have an explicit field to work with internally.
+    """Mount an `ImplicitField` as an `ExplicitField` (e.g. `Field`).
 
     .. code-block:: python
         from new_graphene import String

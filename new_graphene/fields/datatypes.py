@@ -1,6 +1,6 @@
 import datetime
 from decimal import Decimal as PythonDecimal
-from typing import Any, Optional, Type
+from typing import Any, ClassVar, Optional, Type
 
 import graphql
 from graphql import (BooleanValueNode, FloatValueNode, IntValueNode,
@@ -31,7 +31,10 @@ class Scalar[T= Any](ImplicitField, BaseType):
             age = Scalar()
     """
 
-    is_scalar = True
+    is_scalar: ClassVar[bool] = True
+
+    def __repr__(self):
+        return self.print_scalar(self)
 
     @staticmethod
     def parse_literal(node: ValueNode, variables: Optional[dict[str, Any]] = None) -> T:

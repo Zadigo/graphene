@@ -5,9 +5,8 @@ from xmlrpc.client import Boolean
 
 from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
                      GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
-                     GraphQLObjectType, GraphQLResolveInfo,
-                     GraphQLScalarLiteralParser, GraphQLScalarType,
-                     GraphQLScalarValueParser, GraphQLSchema, GraphQLString)
+                     GraphQLNamedType, GraphQLObjectType, GraphQLResolveInfo,
+                     GraphQLScalarLiteralParser, GraphQLScalarValueParser, GraphQLSchema, GraphQLString)
 from graphql import graphql as agraphql
 from graphql import graphql_sync
 
@@ -98,6 +97,9 @@ class TypesContainer(dict):
         """
 
         _final_fields: dict[str, GraphQLField] = {}
+
+        if graphene_type._meta is None:
+            raise TypeError(f"Expected {graphene_type} to have a Meta class.")
 
         for name, field_obj in graphene_type._meta.fields.items():
             # if isinstance(value, Dynamic):
@@ -195,7 +197,7 @@ class TypesContainer(dict):
         return value
 
     def translate_scalar_to_grapql(self, value: TypeScalar):
-        scalars: dict[TypeScalar, GraphQLScalarType] = {
+        scalars: dict[TypeScalar, GraphQLNamedType] = {
             String: GraphQLString,
             Integer: GraphQLInt,
             Float: GraphQLFloat,
@@ -206,13 +208,13 @@ class TypesContainer(dict):
         if value in scalars:
             return scalars[value]
 
-        parse_value: GraphQLScalarValueParser = getattr(
+        parse_value: Optional[GraphQLScalarValueParser] = getattr(
             value,
             'parse_value',
             None
         )
 
-        parse_literal: GraphQLScalarLiteralParser = getattr(
+        parse_literal: Optional[GraphQLScalarLiteralParser] = getattr(
             value,
             'parse_literal',
             None

@@ -1,10 +1,11 @@
 import functools
-from typing import Any, Mapping, Optional
+from typing import Any, MutableMapping, Optional
 
 from new_graphene.fields.arguments import Argument
 from new_graphene.fields.helpers import (ExplicitField, inspect_type,
                                          source_resolver)
-from new_graphene.typings import TypeResolver, TypeScalar
+from new_graphene.typings import (TypeArgument, TypeMapping, TypeObjectType,
+                                  TypeResolver, TypeScalar)
 
 
 class Field(ExplicitField):
@@ -23,7 +24,7 @@ class Field(ExplicitField):
 
     Args:
         field_type (TypeScalar): The type of the field in the GraphQL schema. This can be a scalar type, an object type, an enum, an interface, or a union.
-        args (Mapping[str, Any], optional): Arguments that can be input to the field. Prefer to use ``**extra_args``, unless you use an argument name that clashes with one of the Field arguments presented here (see :ref:`example<ResolverParamGraphQLArguments>`).
+        args (MutableMapping[str, Any], optional): Arguments that can be input to the field. Prefer to use ``**extra_args``, unless you use an argument name that clashes with one of the Field arguments presented here (see :ref:`example<ResolverParamGraphQLArguments>`).
         resolver (Callable, optional): A function to get the value for a Field from the parent value object. If not set, the default resolver method for the schema is used.
         source (str, optional): Attribute name to resolve for this field from the parent value object. Alternative to resolver (cannot set both source and resolver).
         deprecation_reason (str, optional): Setting this value indicates that the field is depreciated and may provide instruction or reason on how for clients to proceed.
@@ -34,10 +35,10 @@ class Field(ExplicitField):
         **extra_args (Any, optional): Any additional arguments to mount on the field. This can be used to specify additional configuration options for the field, such as custom directives or extensions. These extra arguments will be passed through to the underlying GraphQL library when the schema is generated, allowing for advanced users to take advantage of features that may not be directly supported by the Field class itself.
     """
 
-    def __init__(self, field_type: TypeScalar, args: Mapping[str, Any] = None, resolver: Optional[TypeResolver] = None, source: Optional[str] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None, default_value: TypeScalar = None, **extra_args: Any):
+    def __init__(self, field_type: TypeScalar | TypeObjectType, args: Optional[TypeMapping[TypeArgument]] = None, resolver: Optional[TypeResolver] = None, source: Optional[str] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None, default_value: Optional[TypeScalar] = None, **extra_args: Any):
         super().__init__(field_type, counter=creation_counter)
 
-        if args is not None and not isinstance(args, Mapping):
+        if args is not None and not isinstance(args, MutableMapping):
             raise TypeError(
                 f"Expected args to be a Mapping, got {type(args).__name__}"
             )
@@ -56,7 +57,7 @@ class Field(ExplicitField):
             pass
 
         self.field_type = field_type
-        self.args = args or {}, extra_args
+        self.args = args or {}
         self.extra_args = extra_args
         self.resolver = resolver
         self.deprecation_reason = deprecation_reason
@@ -66,7 +67,9 @@ class Field(ExplicitField):
         self.default_value = default_value
 
         self._arguments = Argument.translate_arguments(
-            self.args, self.extra_args)
+            self.args,
+            self.extra_args
+        )
 
         if source is not None:
             self.resolver = functools.partial(source_resolver, source)

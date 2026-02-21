@@ -1,10 +1,10 @@
-from typing import Any, Sequence
+from typing import AbstractSet, Any, Sequence
 
 
 class InvalidMetaOptionsError(Exception):
     message = "Invalid options provided in Meta class: {invalid_keys}. Valid options are: {valid_keys}"
 
-    def __init__(self, invalid_keys: Sequence[str], valid_keys: Sequence[str]):
+    def __init__(self, invalid_keys: Sequence[str] | AbstractSet[str], valid_keys: Sequence[str] | AbstractSet[str]):
         super().__init__(self.message.format(invalid_keys=invalid_keys, valid_keys=valid_keys))
 
 

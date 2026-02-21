@@ -1,4 +1,5 @@
-from new_graphene.typings import TypeArgument, TypeImplicitField, TypeSchema
+from new_graphene.typings import (TypeArgument, TypeImplicitField, TypeScalar,
+                                  TypeSchema)
 
 
 class PrintingMixin:
@@ -16,3 +17,7 @@ class PrintingMixin:
     @staticmethod
     def print_implicit_field(item: TypeImplicitField) -> str:
         return f"<{item._meta.name}: {item.creation_counter}>"
+
+    @staticmethod
+    def print_scalar(item: TypeScalar) -> str:
+        return f"<{item._meta._internal_name}: [{item.creation_counter}]>"

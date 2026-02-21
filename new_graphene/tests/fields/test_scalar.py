@@ -1,7 +1,8 @@
 import unittest
 
 from new_graphene.base import BaseType
-from new_graphene.fields.datatypes import Scalar
+from new_graphene.fields.arguments import Argument
+from new_graphene.fields.datatypes import Integer, Scalar, String
 
 
 class TestScalar(unittest.TestCase):
@@ -10,12 +11,21 @@ class TestScalar(unittest.TestCase):
         self.assertEqual(result, "test")
         self.assertEqual(Scalar.creation_counter, 1)
 
+    def test_instance(self):
         instance = Scalar()
         self.assertIsInstance(instance, BaseType)
         self.assertEqual(instance.creation_counter, 2)
 
+        print(instance)
+
+    def test_args_and_kwargs(self):
+        instance = Scalar(
+            Integer(name='age'),
+            name=Argument(String)
+        )
+
+        print(instance.args, instance.kwargs)
+
     def test_parse_literal(self):
         with self.assertRaises(NotImplementedError):
-            Scalar.parse_literal(None)
-            Scalar.parse_literal(None)
             Scalar.parse_literal(None)
