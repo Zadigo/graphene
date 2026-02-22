@@ -52,27 +52,67 @@ class TestTypesContainer(unittest.TestCase):
         with self.assertRaises(AttributeError):
             instance.add_to_self(NoName)
 
+    def test_get_field_resolver_none(self):
+        class SimpleQuery(ObjectType):
+            pass
+
+        instance = TypesContainer()
+        result = instance._get_field_resolver(
+            SimpleQuery,
+            "resolve_test",
+            "test",
+            None
+        )
+        self.assertIsNone(result)
+
+        class WrontType:
+            pass
+
+        result = instance._get_field_resolver(
+            WrontType,
+            "resolve_test",
+            "test",
+            None
+        )
+        self.assertIsNone(result)
+
+    def test_get_field_resolver_success(self):
+        class SimpleQuery(ObjectType):
+            def resolve_test(self, info):
+                return "test"
+
+        instance = TypesContainer()
+        result = instance._get_field_resolver(
+            SimpleQuery,
+            "resolve_test",
+            "test",
+            None
+        )
+
+        self.assertIsNotNone(result)
+        self.assertTrue(callable(result))
+
     def test_translate_scalar_to_grapql(self):
         instance = TypesContainer()
         result = instance.translate_scalar_to_grapql(Integer)
         self.assertIsNotNone(result)
         self.assertEqual(result, GraphQLInt)
 
-    def test_translate_objecttype_to_grapql(self):
+    def test_translate_objecttype(self):
         instance = TypesContainer()
 
         class SimpleType(ObjectType):
             name = Integer()
 
-        result = instance.translate_objecttype_to_grapql(SimpleType)
+        result = instance.translate_objecttype(SimpleType)
         self.assertIsNotNone(result)
 
-    def test_translate_fields_to_graphql(self):
+    def test_translate_fields(self):
         instance = TypesContainer()
 
         class SimpleType(ObjectType):
             name = Integer()
 
-        result = instance._translate_fields_to_graphql(SimpleType)
+        result = instance._translate_fields(SimpleType)
         self.assertIsNotNone(result)
         self.assertIn('name', result)

@@ -6,7 +6,7 @@ from new_graphene.exceptions import InvalidMetaOptionsError
 from new_graphene.fields.base import Field
 from new_graphene.fields.helpers import get_field_as
 from new_graphene.typings import (TypeDataclass, TypeExplicitField, TypeField,
-                                  TypeInterface)
+                                  TypeInterface, TypeResolver)
 from new_graphene.utils.base import ObjectTypesEnum
 
 
@@ -29,6 +29,7 @@ class BaseOptions:
         self._class_name: Optional[str] = None
         # Internal type name e.g. Query, Mutation etc.
         self._internal_name: Optional[str] = None
+        self.default_resolver: Optional[TypeResolver] = None
 
     def check_meta_options(self, keys: Sequence[str]):
         """Checks if the provided keys in the Meta class are valid options.

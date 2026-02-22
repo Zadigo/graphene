@@ -19,7 +19,7 @@ from new_graphene.fields.resolvers import default_resolver
 from new_graphene.grapqltypes import (GrapheneGraphqlObjectType,
                                       GrapheneGraphqlScalarType)
 from new_graphene.typings import (TypeAllTypes, TypeGraphqlExecuteOptions,
-                                  TypeObjectType, TypeScalar)
+                                  TypeObjectType, TypeResolver, TypeScalar)
 from new_graphene.utils.base import get_unbound_function
 from new_graphene.utils.printing import PrintingMixin
 
@@ -73,7 +73,21 @@ class TypesContainer(dict):
 
         return value
 
-    def _get_function_for_type(self, graphene_type: TypeObjectType, func_name: str, field_name: str, default_value: TypeAllTypes):
+    def _get_field_resolver(self, graphene_type: TypeObjectType, func_name: str, field_name: str, default_value: TypeAllTypes):
+        """Searches the resolve for the field on the ObjectTypes and
+        interfaces implemented by the ObjectType. The search is done in the following order:
+        1. The ObjectType itself
+        2. The interfaces implemented by the ObjectType
+        
+        .. code-block:: python
+            from new_graphene import ObjectType, String
+
+            class User(ObjectType):
+                name = String()
+
+                def resolve_name(self, info): # This is the resolver for 'name'
+                    return "John Doe"
+        """
         if not issubclass(graphene_type, ObjectType):
             return None
 
@@ -96,7 +110,7 @@ class TypesContainer(dict):
         return None
 
     # create_fields_for_type
-    def _translate_fields_to_graphql(self, graphene_type: TypeObjectType, is_input_field: bool = False):
+    def _translate_fields(self, graphene_type: TypeObjectType, is_input_field: bool = False):
         """Translates the fields of a Graphene ObjectType to GraphQL fields. 
         This involves iterating over the fields defined in the Graphene ObjectType, 
         building the corresponding GraphQL field definitions, and handling any 
@@ -107,15 +121,6 @@ class TypesContainer(dict):
         The resolvers for the fields are also wrapped to ensure that they are properly 
         integrated with the GraphQL execution process. This may involve handling 
         default resolvers, subscription resolvers, and any custom resolvers defined by the user.
-
-        .. code-block:: python
-            from new_graphene import ObjectType, String
-
-            class User(ObjectType):
-                name = String()
-
-                def resolve_name(self, info):
-                    return "John Doe"
         """
 
         _final_fields: dict[str, GraphQLField] = {}
@@ -127,11 +132,11 @@ class TypesContainer(dict):
             if isinstance(field_obj, Dynamic):
                 pass
 
-            field_type = self.add_to_self(field_obj.field_type)
+            input_or_output_type = self.add_to_self(field_obj.field_type)
 
             if is_input_field:
                 _final_field = GraphQLInputField(
-                    field_type,
+                    input_or_output_type,
                     description=field_obj.description,
                     default_value=field_obj.default_value,
                     deprecation_reason=field_obj.deprecation_reason
@@ -149,7 +154,7 @@ class TypesContainer(dict):
                         deprecation_reason=arg.deprecation_reason,
                     )
 
-                func_resolver = self._get_function_for_type(
+                func_resolver = self._get_field_resolver(
                     graphene_type,
                     f"subscribe_{name}",
                     name,
@@ -157,26 +162,29 @@ class TypesContainer(dict):
                 )
 
                 subscribe = field_obj.wrap_subscribe(func_resolver)
-                default_field_resolver = resolve_for_subscription if subscribe is not None else None
 
-                field_default_resolver = None
+                field_default_resolver: TypeResolver = None
+                if subscribe is not None:
+                    field_default_resolver = resolve_for_subscription
+
                 if issubclass(graphene_type, ObjectType):
                     _resolver = graphene_type._meta.default_resolver or default_resolver()
                     field_default_resolver = functools.partial(
                         _resolver, name, field_obj.default_value
                     )
 
+                func_for_type = self._get_field_resolver(
+                    graphene_type,
+                    f"resolve_{name}",
+                    name,
+                    field_obj.default_value
+                )
                 partial_resolver = field_obj.wrap_resolve(
-                    self._get_function_for_type(
-                        graphene_type,
-                        f"resolve_{name}",
-                        name,
-                        field_obj.default_value
-                    ) or field_default_resolver
+                    func_for_type or field_default_resolver
                 )
 
                 _final_field = GraphQLField(
-                    field_type,
+                    input_or_output_type,
                     args=built_args,
                     resolve=partial_resolver,
                     subscribe=subscribe,
@@ -192,32 +200,47 @@ class TypesContainer(dict):
     def _resolve_type(self, resolve_type_func, type_name, root, info, _type):
         pass
 
-    def add_to_self(self, value: TypeObjectType | None) -> Optional[TypeObjectType]:
-        if value is None:
-            return value
+    def add_to_self(self, graphene_type: TypeObjectType | TypeScalar | None) -> Optional[TypeObjectType]:
+        """Checks the Graphene internal type against the existing fields in the container
+        and then translates it to the corresponding GraphQL type if it is not already present.
+        """
+        if graphene_type is None:
+            return graphene_type
 
-        if inspect.isfunction(value):
-            return value()
+        if inspect.isfunction(graphene_type):
+            return graphene_type()
 
-        name = getattr(value._meta, 'name', None)
+        name = getattr(graphene_type._meta, 'name', None)
         if name is None:
-            raise ValueError(f"Expected {value} to have a name.")
+            raise ValueError(f"Expected {graphene_type} to have a name.")
 
-        result = self.get(name)
-        if result is not None:
-            return result
+        graphql_type = self.get(name)
+        if graphql_type is not None:
+            return graphql_type
 
-        if issubclass(value, Scalar):
-            grapql_type = self.translate_scalar_to_grapql(value)
-        elif issubclass(value, ObjectType):
-            grapql_type = self.translate_objecttype_to_grapql(value)
-        else:
-            raise ValueError(f"Expected {value} to be a valid Graphene type.")
+        if issubclass(graphene_type, Scalar):
+            graphql_type = self.translate_scalar(graphene_type)
+        elif issubclass(graphene_type, ObjectType):
+            graphql_type = self.translate_objecttype(graphene_type)
+        # elif issubclass(graphene_type, Interface):
+        #     pass
+        # elif issubclass(graphene_type, Union):
+        #     pass
+        # elif issubclass(graphene_type, Enum):
+        #     pass
+        # elif issubclass(graphene_type, InputObjectType):
+        #     pass
 
-        self[name] = grapql_type
-        return value
+        if graphql_type is None:
+            raise ValueError(
+                f"Expected {graphene_type} to be a "
+                "valid Graphene type."
+            )
 
-    def translate_scalar_to_grapql(self, value: TypeScalar):
+        self[name] = graphql_type
+        return graphql_type
+
+    def translate_scalar(self, value: TypeScalar):
         scalars: dict[TypeScalar, GraphQLNamedType] = {
             'String': GraphQLString,
             'Integer': GraphQLInt,
@@ -249,11 +272,11 @@ class TypesContainer(dict):
             parse_literal=parse_literal
         )
 
-    def translate_objecttype_to_grapql(self, graphene_type: TypeObjectType):
+    def translate_objecttype(self, graphene_type: TypeObjectType):
         def interfaces():
             return []
 
-        fields = self._translate_fields_to_graphql(graphene_type)
+        fields = self._translate_fields(graphene_type)
         return GrapheneGraphqlObjectType(
             graphene_type._meta.name,
             fields,
@@ -262,13 +285,13 @@ class TypesContainer(dict):
             description=graphene_type._meta.description
         )
 
-    def translate_union_to_grapql(self, graphene_type: TypeObjectType):
+    def translate_union(self, graphene_type: TypeObjectType):
         pass
 
-    def translate_interface_to_grapql(self, graphene_type: TypeObjectType):
+    def translate_interface(self, graphene_type: TypeObjectType):
         pass
 
-    def translate_enum_to_grapql(self, graphene_type: TypeObjectType):
+    def translate_enum(self, graphene_type: TypeObjectType):
         pass
 
 

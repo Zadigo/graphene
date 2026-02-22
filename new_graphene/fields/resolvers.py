@@ -13,7 +13,7 @@ def dict_resolver(name: str, default_value, root, info: GraphQLResolveInfo, **ar
     return root.get(name, default_value)
 
 
-def default_resolver(name: str, default_value, root, info: GraphQLResolveInfo, **arguments) -> Callable[..., TypeResolver]:
+def default_resolver() -> Callable[..., TypeResolver]:
     """The default resolver function used by Graphene to resolve field values. 
     It first checks if the root object is a dictionary and attempts to retrieve the 
     value using the dict_resolver. If the root object is not a dictionary, 
@@ -29,7 +29,7 @@ def default_resolver(name: str, default_value, root, info: GraphQLResolveInfo, *
         info (GraphQLResolveInfo): An object containing information about the execution state of the query, including the field being resolved, the path to the field, and any arguments passed to the field.
         **arguments (Any): Any additional arguments passed to the field resolver. These can be used to customize the resolution logic.
     """
-    def resolver():
+    def resolver(name: str, default_value, root, info: GraphQLResolveInfo, **arguments):
         func = dict_resolver if isinstance(root, dict) else attribute_resolver
         return func(name, default_value, root, info, **arguments)
     return resolver
