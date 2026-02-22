@@ -43,6 +43,8 @@ class TypesContainer(dict):
     """
 
     def __init__(self, query: Optional[TypeObjectType] = None, mutation: Optional[TypeObjectType] = None, subscription: Optional[TypeObjectType] = None, types: Optional[Sequence[TypeObjectType]] = None, auto_camelcase: bool = True):
+        self.auto_camelcase = auto_camelcase
+
         _query = self._check_type(query)
         _mutation = self._check_type(mutation)
         _subscription = self._check_type(subscription)
@@ -54,11 +56,9 @@ class TypesContainer(dict):
         self._check_types(types)
         self.types = types or []
 
-        self.auto_camelcase = auto_camelcase
-
     def _get_name(self, name: str) -> str:
-        if self.auto_camelcase:
-            return ''.join(word.capitalize() for word in name.split('_'))
+        # if self.auto_camelcase:
+        #     return ''.join(word.capitalize() for word in name.split('_'))
         return name
 
     def _check_types(self, value: Any):
@@ -83,7 +83,7 @@ class TypesContainer(dict):
         interfaces implemented by the ObjectType. The search is done in the following order:
         1. The ObjectType itself
         2. The interfaces implemented by the ObjectType
-        
+
         .. code-block:: python
             from new_graphene import ObjectType, String
 
@@ -282,7 +282,10 @@ class TypesContainer(dict):
 
     def translate_objecttype(self, graphene_type: TypeObjectType):
         def interfaces():
-            return []
+            interfaces = []
+            for interface in graphene_type._meta.interfaces:
+                interfaces.append(self.add_to_self(interface))
+            return interfaces
 
         fields = self._translate_fields(graphene_type)
         return GrapheneGraphqlObjectType(

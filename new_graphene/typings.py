@@ -7,6 +7,7 @@ from graphql import (ExecutionContext, GraphQLFieldResolver,
                      Source, ValueNode)
 
 if TYPE_CHECKING:
+    from new_graphene.base import BaseOptions, BaseType
     from new_graphene.fields.arguments import Argument
     from new_graphene.fields.datatypes import Scalar
     from new_graphene.fields.helpers import ExplicitField, ImplicitField
@@ -20,9 +21,13 @@ type TypeScalar[T= TypeAllTypes] = Scalar[T]
 
 type TypeField = ExplicitField | ImplicitField
 
+type TypeBaseType = BaseType
+
 type TypeExplicitField = ExplicitField
 
 type TypeImplicitField = ImplicitField
+
+type TypeBaseOptions = BaseOptions
 
 type TypeResolver[T = TypeAllTypes] = Callable[[str, GraphQLResolveInfo, str], T]
 

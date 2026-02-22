@@ -8,11 +8,12 @@ from new_graphene.fields.helpers import get_field_as
 from new_graphene.typings import (TypeDataclass, TypeExplicitField, TypeField,
                                   TypeInterface, TypeResolver)
 from new_graphene.utils.base import ObjectTypesEnum
+from new_graphene.utils.printing import PrintingMixin
 
 
-class BaseOptions:
-    def __init__(self, cls: type['BaseTypeMetaclass'], **kwargs):
-        self.cls = cls
+class BaseOptions(PrintingMixin):
+    def __init__(self, klass: type['BaseObjectType']):
+        self.cls = klass
         # A custom name for the GraphQL type,
         # if not provided, it will default to the
         # class name
@@ -30,6 +31,9 @@ class BaseOptions:
         # Internal type name e.g. Query, Mutation etc.
         self._internal_name: Optional[str] = None
         self.default_resolver: Optional[TypeResolver] = None
+
+    def __repr__(self):
+        return self.print_base_options(self)
 
     def check_meta_options(self, keys: Sequence[str]):
         """Checks if the provided keys in the Meta class are valid options.
@@ -93,15 +97,17 @@ class BaseOptions:
 
 class BaseObjectType(type):
     def __new__(cls, name: str, bases: tuple[type], namespace: dict, /, **kwds):
-        klass = super().__new__(cls, name, bases, namespace, **kwds)
+        super_new = super().__new__
 
         if not bases:
-            return klass
+            return super_new(cls, name, bases, namespace)
+
+        klass = super_new(cls, name, bases, namespace)
 
         if not hasattr(klass, '_meta'):
             return klass
 
-        base_options = BaseOptions(cls=klass)
+        base_options = BaseOptions(klass)
         setattr(klass, '_meta', base_options)
         base_options.name = name
         base_options._class_name = name
@@ -193,7 +199,6 @@ class BaseObjectType(type):
             setattr(klass, 'dataclass_model', dataclass)
 
             klass.prepare(klass)
-            return klass
 
         return klass
 
@@ -236,6 +241,9 @@ class BaseType(BaseTypeMetaclass):
     is_interface_type: bool = False  # TODO: Remove
     dataclass_model: Optional[TypeDataclass] = None
     internal_type: Optional[ObjectTypesEnum] = ObjectTypesEnum.NOT_DEFINED
+
+    def __repr__(self):
+        return self._meta.print_base_type(self)
 
     @classmethod
     def create(cls, name: str, **kwargs):

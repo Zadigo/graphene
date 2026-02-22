@@ -1,3 +1,4 @@
+
 from graphql import GraphQLResolveInfo
 
 from new_graphene.fields.base import Field
@@ -16,13 +17,16 @@ class Query(ObjectType):
     patron = Field(Patron)
 
     def resolve_patron(root, info: GraphQLResolveInfo):
-        return Patron(id=1, name="Syrus", age=27)
+        # return Patron(id=1, name="Syrus", age=27)
+        # return 'Google'
+        # return root.dataclass_model(id=1, name="Syrus", age=27)
+        return {"id": "1", "name": "Syrus", "age": 27}
 
 
 schema = Schema(query=Query)
 
 query = """
-    query something{
+    query something {
       patron {
         id
         name
@@ -40,4 +44,5 @@ def test_query():
 
 if __name__ == "__main__":
     result = schema.execute(query)
-    print(result.data["patron"])
+    print(result)
+    # print(result.data["patron"])

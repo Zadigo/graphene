@@ -1,6 +1,7 @@
 import unittest
 
 from graphql import GraphQLInt
+from grapqltypes import GrapheneGraphqlObjectType
 
 from new_graphene.fields.datatypes import Integer, String
 from new_graphene.fields.interface import Interface
@@ -107,6 +108,10 @@ class TestTypesContainer(unittest.TestCase):
 
         result = instance.translate_objecttype(SimpleType)
         self.assertIsNotNone(result)
+        print(result)
+        self.assertIsInstance(result, GrapheneGraphqlObjectType)
+
+        print(result)
 
     def test_translate_fields(self):
         instance = TypesContainer()
@@ -138,6 +143,8 @@ class TestTypesContainer(unittest.TestCase):
         self.assertIn('Age', result)
 
         print(result)
+        print(SimpleType._meta)
+        print('Repr:', SimpleType())
 
     def test_translate_fields_with_interfaces(self):
         instance = TypesContainer()
