@@ -9,6 +9,7 @@ from graphql.error import GraphQLError
 
 from new_graphene.base import BaseType
 from new_graphene.fields.helpers import ImplicitField
+from new_graphene.utils.base import ObjectTypesEnum
 
 MAX_INT = 2147483647
 
@@ -31,7 +32,8 @@ class Scalar[T= Any](ImplicitField, BaseType):
             age = Scalar()
     """
 
-    is_scalar: ClassVar[bool] = True
+    is_scalar: ClassVar[bool] = True # TODO: Remove
+    internal_type: ClassVar[ObjectTypesEnum] = ObjectTypesEnum.SCALAR
 
     def __repr__(self):
         return self.print_scalar(self)

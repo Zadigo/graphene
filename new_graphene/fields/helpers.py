@@ -4,9 +4,9 @@ from functools import total_ordering
 from typing import Any, Callable, Optional, Type
 from warnings import deprecated
 
-from graphql import GraphQLResolveInfo
-
-from new_graphene.typings import TypeArgument, TypeField, TypeObjectType, TypeScalar
+from new_graphene.typings import (TypeArgument, TypeField, TypeObjectType,
+                                  TypeScalar)
+from new_graphene.utils.base import ObjectTypesEnum
 from new_graphene.utils.module_loading import import_string
 from new_graphene.utils.printing import PrintingMixin
 
@@ -49,7 +49,8 @@ class BaseField(PrintingMixin):
 
     creation_counter: int = 1
     is_mounted: bool = False
-    is_scalar: bool = False
+    is_scalar: bool = False  # TODO: Remove
+    internal_type: Optional[ObjectTypesEnum] = ObjectTypesEnum.FIELD
 
     def __init__(self, *args: TypeArgument, counter: Optional[int] = None, **kwargs: TypeArgument):
         self.creation_counter = counter or self.increase_counter()

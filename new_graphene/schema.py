@@ -1,7 +1,6 @@
 import functools
 import inspect
 from typing import Any, Optional, Sequence
-from xmlrpc.client import Boolean
 
 from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
                      GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
@@ -12,7 +11,8 @@ from graphql import graphql as agraphql
 from graphql import graphql_sync
 
 from new_graphene.exceptions import GrapheneObjectTypeError
-from new_graphene.fields.datatypes import ID, Float, Integer, Scalar, String
+# from new_graphene.fields.datatypes import ID, Float, Integer, Scalar, String
+from new_graphene.fields.datatypes import Scalar
 from new_graphene.fields.dynamic import Dynamic
 from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.fields.resolvers import default_resolver
@@ -157,8 +157,7 @@ class TypesContainer(dict):
                 )
 
                 subscribe = field_obj.wrap_subscribe(func_resolver)
-
-                default_field_resolver = resolve_for_subscription if subscribe else None
+                default_field_resolver = resolve_for_subscription if subscribe is not None else None
 
                 field_default_resolver = None
                 if issubclass(graphene_type, ObjectType):
@@ -202,7 +201,7 @@ class TypesContainer(dict):
 
         name = getattr(value._meta, 'name', None)
         if name is None:
-            raise GrapheneObjectTypeError(value)
+            raise ValueError(f"Expected {value} to have a name.")
 
         result = self.get(name)
         if result is not None:
@@ -213,22 +212,22 @@ class TypesContainer(dict):
         elif issubclass(value, ObjectType):
             grapql_type = self.translate_objecttype_to_grapql(value)
         else:
-            raise GrapheneObjectTypeError(value)
+            raise ValueError(f"Expected {value} to be a valid Graphene type.")
 
-        self[name] = value
+        self[name] = grapql_type
         return value
 
     def translate_scalar_to_grapql(self, value: TypeScalar):
         scalars: dict[TypeScalar, GraphQLNamedType] = {
-            String: GraphQLString,
-            Integer: GraphQLInt,
-            Float: GraphQLFloat,
-            Boolean: GraphQLBoolean,
-            ID: GraphQLID
+            'String': GraphQLString,
+            'Integer': GraphQLInt,
+            'Float': GraphQLFloat,
+            'Boolean': GraphQLBoolean,
+            'ID': GraphQLID
         }
 
-        if value in scalars:
-            return scalars[value]
+        if value._meta._class_name in scalars:
+            return scalars[value._meta._class_name]
 
         parse_value: Optional[GraphQLScalarValueParser] = getattr(
             value,
@@ -254,9 +253,10 @@ class TypesContainer(dict):
         def interfaces():
             return []
 
+        fields = self._translate_fields_to_graphql(graphene_type)
         return GrapheneGraphqlObjectType(
             graphene_type._meta.name,
-            self._translate_fields_to_graphql(graphene_type),
+            fields,
             interfaces=interfaces,
             is_type_of=None,
             description=graphene_type._meta.description
@@ -312,7 +312,7 @@ class Schema(PrintingMixin):
             types=types,
             auto_camelcase=auto_camelcase
         )
-        
+
         self._graphql_schema = GraphQLSchema(
             query=self._types_container.query,
             mutation=self._types_container.mutation,

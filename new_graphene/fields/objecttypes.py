@@ -1,6 +1,7 @@
 from typing import ClassVar
 
 from new_graphene.base import BaseType
+from new_graphene.utils.base import ObjectTypesEnum
 
 
 class ObjectType(BaseType):
@@ -47,4 +48,5 @@ class ObjectType(BaseType):
         fields (Dict[str, graphene.Field]): A dictionary of field names to Field instances. This is used to define the fields of the object type.
     """
 
-    is_object_type: ClassVar[bool] = True
+    is_object_type: ClassVar[bool] = True # TODO: Remove
+    internal_type: ClassVar[ObjectTypesEnum] = ObjectTypesEnum.OBJECT_TYPE

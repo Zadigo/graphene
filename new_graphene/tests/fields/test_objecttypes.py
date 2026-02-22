@@ -6,6 +6,7 @@ from new_graphene.fields.helpers import ImplicitField
 from new_graphene.fields.interface import Interface
 from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.schema import Schema
+from new_graphene.utils.base import ObjectTypesEnum
 
 
 class MyInterfaceType(Interface):
@@ -27,22 +28,30 @@ class TestObjectType(unittest.TestCase):
         class CarsType(ObjectType):
             pass
 
-        self.assertIsNone(CarsType._meta.name)
+        self.assertEqual(CarsType.internal_type, ObjectTypesEnum.OBJECT_TYPE)
+        self.assertIsNotNone(CarsType._meta.name)
         self.assertIsNone(CarsType._meta.description)
         self.assertEqual(CarsType._meta.interfaces, [])
         self.assertEqual(CarsType._meta.fields, {})
+        self.assertIsNotNone(CarsType._meta._internal_name)
 
     def test_implementation_with_meta(self):
         class CarsWithMetaType(ObjectType):
             class Meta:
-                name = 'CarsWithMetaType'
+                name = 'cars'
                 description = 'A type representing cars with meta information'
 
-        self.assertEqual(CarsWithMetaType._meta.name, "CarsWithMetaType")
-        self.assertEqual(CarsWithMetaType._meta.description,
-                         "A type representing cars with meta information")
+        self.assertEqual(CarsWithMetaType._meta.name, "cars")
+        self.assertEqual(CarsWithMetaType._meta._internal_name, "ObjectType")
+
+        self.assertEqual(
+            CarsWithMetaType._meta.description,
+            "A type representing cars with meta information"
+        )
+
         self.assertEqual(CarsWithMetaType._meta.interfaces, [])
         self.assertEqual(CarsWithMetaType._meta.fields, {})
+        self.assertIsNotNone(CarsWithMetaType._meta._internal_name)
 
     def test_implementation_lazy_object_type(self):
         class InnerObjectType(ObjectType):

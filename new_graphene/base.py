@@ -7,11 +7,15 @@ from new_graphene.fields.base import Field
 from new_graphene.fields.helpers import get_field_as
 from new_graphene.typings import (TypeDataclass, TypeExplicitField, TypeField,
                                   TypeInterface)
+from new_graphene.utils.base import ObjectTypesEnum
 
 
 class BaseOptions:
     def __init__(self, cls: type['BaseTypeMetaclass'], **kwargs):
         self.cls = cls
+        # A custom name for the GraphQL type, 
+        # if not provided, it will default to the 
+        # class name
         self.name: Optional[str] = None
         self.description: Optional[str] = None
 
@@ -20,6 +24,10 @@ class BaseOptions:
         self.accepted_keys = {'name', 'description', 'interfaces', 'abstract'}
 
         self._base_meta: Optional[type] = None
+        # Internal name is used to store the name of 
+        # the type in the GraphQL schema, 
+        self._class_name: Optional[str] = None
+        # Internal type name e.g. Query, Mutation etc.
         self._internal_name: Optional[str] = None
 
     def check_meta_options(self, keys: Sequence[str]):
@@ -94,7 +102,17 @@ class BaseObjectType(type):
 
         base_options = BaseOptions(cls=klass)
         setattr(klass, '_meta', base_options)
+        base_options.name = name
+        base_options._class_name = name
         base_options._internal_name = name
+
+        internal_type = getattr(klass, 'internal_type', None)
+        if internal_type is not None:
+            if internal_type != ObjectTypesEnum.NOT_DEFINED:
+                base_options._internal_name = internal_type.value
+
+        if base_options.description is None and klass.__doc__ is not None:
+            base_options.description = inspect.cleandoc(klass.__doc__)
 
         # Extract the Meta class from the namespace
         # and process its options
@@ -131,6 +149,7 @@ class BaseObjectType(type):
                 return klass
 
             base_options.build_fields(namespace)
+
             _dataclass_fields = []
 
             for key, obj_field in filtered_fields.items():
@@ -150,28 +169,34 @@ class BaseObjectType(type):
             # If the class is a subclass of another ObjectType,
             # we need to make sure to include the fields from the
             # parent class as well
-            for base in reversed(bases):
-                error_message = f"Base class {base.__name__} must be marked as abstract to be inherited by {name}"
-                user_defined_fields = base_options.filter_fields(base.__dict__)
-                if not user_defined_fields:
-                    continue
+            # for base in reversed(bases):
+            #     error_message = f"Base class {base.__name__} must be marked as abstract to be inherited by {name}"
+            #     user_defined_fields = base_options.filter_fields(base.__dict__)
+            #     if not user_defined_fields:
+            #         continue
 
-                obj_meta = getattr(base, 'Meta', None)
-                if obj_meta is None:
-                    raise TypeError(error_message)
+            #     obj_meta = getattr(base, 'Meta', None)
+            #     if obj_meta is None:
+            #         raise TypeError(error_message)
 
-                is_abstract = getattr(obj_meta, 'abstract', False)
-                if not is_abstract:
-                    raise TypeError(error_message)
+            #     is_abstract = getattr(obj_meta, 'abstract', False)
+            #     if not is_abstract:
+            #         raise TypeError(error_message)
 
-                for key, value in user_defined_fields.items():
-                    base_options.add_field(key, get_field_as(value, Field))
+            #     for key, value in user_defined_fields.items():
+            #         base_options.add_field(key, get_field_as(value, Field))
 
             dataclass = make_dataclass(name, _dataclass_fields, bases=())
             setattr(klass, 'dataclass_model', dataclass)
 
         klass.prepare(klass)
         return klass
+
+    @classmethod
+    def prepare(cls, klass: type['BaseTypeMetaclass']):
+        """Finalizes the preparation of the ObjectType by setting 
+        the name and description if they are not already set."""
+        pass
 
 
 class BaseTypeMetaclass(metaclass=BaseObjectType):
@@ -194,20 +219,11 @@ class BaseType(BaseTypeMetaclass):
 
     # This is used to mark the class as an ObjectType,
     # so that the dataclass is created for it
-    is_object_type: bool = False
-    is_interface_type: bool = False
+    is_object_type: bool = False  # TODO: Remove
+    is_interface_type: bool = False  # TODO: Remove
     dataclass_model: Optional[TypeDataclass] = None
+    internal_type: Optional[ObjectTypesEnum] = ObjectTypesEnum.NOT_DEFINED
 
     @classmethod
     def create(cls, name: str, **kwargs):
         pass
-
-    def prepare(self):
-        """Finalizes the preparation of the ObjectType by setting 
-        the name and description if they are not already set."""
-        if self._meta is not None:
-            if self._meta.name is None:
-                self._meta.name = self.__name__
-
-            if self._meta.description is None and self.__doc__ is not None:
-                self._meta.description = inspect.cleandoc(self.__doc__)
