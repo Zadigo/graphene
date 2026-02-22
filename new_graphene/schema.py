@@ -6,18 +6,21 @@ from xmlrpc.client import Boolean
 from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
                      GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
                      GraphQLNamedType, GraphQLObjectType, GraphQLResolveInfo,
-                     GraphQLScalarLiteralParser, GraphQLScalarValueParser, GraphQLSchema, GraphQLString)
+                     GraphQLScalarLiteralParser, GraphQLScalarValueParser,
+                     GraphQLSchema, GraphQLString)
 from graphql import graphql as agraphql
 from graphql import graphql_sync
 
 from new_graphene.exceptions import GrapheneObjectTypeError
 from new_graphene.fields.datatypes import ID, Float, Integer, Scalar, String
+from new_graphene.fields.dynamic import Dynamic
 from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.fields.resolvers import default_resolver
 from new_graphene.grapqltypes import (GrapheneGraphqlObjectType,
                                       GrapheneGraphqlScalarType)
-from new_graphene.typings import (TypeGraphqlExecuteOptions, TypeObjectType,
-                                  TypeScalar)
+from new_graphene.typings import (TypeAllTypes, TypeGraphqlExecuteOptions,
+                                  TypeObjectType, TypeScalar)
+from new_graphene.utils.base import get_unbound_function
 from new_graphene.utils.printing import PrintingMixin
 
 
@@ -70,8 +73,27 @@ class TypesContainer(dict):
 
         return value
 
-    def _get_function_for_type(self, value: TypeObjectType):
-        pass
+    def _get_function_for_type(self, graphene_type: TypeObjectType, func_name: str, field_name: str, default_value: TypeAllTypes):
+        if not issubclass(graphene_type, ObjectType):
+            return None
+
+        resolver = getattr(graphene_type, func_name, None)
+
+        if resolver is None:
+            interface_resolver = None
+            for interface in graphene_type._meta.interfaces:
+                if field_name not in interface._meta.fields:
+                    continue
+
+                interface_resolver = getattr(interface, func_name, None)
+                if interface_resolver is not None:
+                    break
+            resolver = interface_resolver
+
+        if resolver is not None:
+            return get_unbound_function(resolver)
+
+        return None
 
     # create_fields_for_type
     def _translate_fields_to_graphql(self, graphene_type: TypeObjectType, is_input_field: bool = False):
@@ -102,8 +124,8 @@ class TypesContainer(dict):
             raise TypeError(f"Expected {graphene_type} to have a Meta class.")
 
         for name, field_obj in graphene_type._meta.fields.items():
-            # if isinstance(value, Dynamic):
-            #     pass
+            if isinstance(field_obj, Dynamic):
+                pass
 
             field_type = self.add_to_self(field_obj.field_type)
 
@@ -127,14 +149,14 @@ class TypesContainer(dict):
                         deprecation_reason=arg.deprecation_reason,
                     )
 
-                subscribe = field_obj.wrap_subscribe(
-                    self._get_function_for_type(
-                        graphene_type,
-                        f"subscribe_{name}",
-                        name,
-                        field_obj.default_value
-                    )
+                func_resolver = self._get_function_for_type(
+                    graphene_type,
+                    f"subscribe_{name}",
+                    name,
+                    field_obj.default_value
                 )
+
+                subscribe = field_obj.wrap_subscribe(func_resolver)
 
                 default_field_resolver = resolve_for_subscription if subscribe else None
 
@@ -282,13 +304,15 @@ class Schema(PrintingMixin):
         self.subscription = subscription
         self.types = types or []
         self.auto_camelcase = auto_camelcase
-        self._types_container: TypesContainer = TypesContainer(
+
+        self._types_container = TypesContainer(
             query=query,
             mutation=mutation,
             subscription=subscription,
             types=types,
             auto_camelcase=auto_camelcase
         )
+        
         self._graphql_schema = GraphQLSchema(
             query=self._types_container.query,
             mutation=self._types_container.mutation,

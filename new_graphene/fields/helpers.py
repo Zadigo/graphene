@@ -31,10 +31,6 @@ MAX_INT = 2147483647
 MIN_INT = -2147483648
 
 
-def source_resolver(source: str, root, info: GraphQLResolveInfo, **arguments):
-    pass
-
-
 @total_ordering
 class BaseField(PrintingMixin):
     """BaseField is the base class for all field types in the Graphene library. It is a container

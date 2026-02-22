@@ -37,12 +37,13 @@ class BaseOptions:
 
     def filter_fields(self, namespace: Mapping[str, Any] | Sequence[tuple[str, Any]], sort: bool = False) -> MutableMapping[str, TypeField]:
         """Filters the fields from the provided namespace"""
-        items = namespace.items() if isinstance(namespace, MutableMapping) else namespace
+        if isinstance(namespace, (MutableMapping, Mapping)):
+            namespace = list(namespace.items())
 
         iternal_keys = {'_meta', 'is_object_type'}
         user_defined_fields = {}
 
-        for key, value in items:
+        for key, value in namespace:
             if key.startswith('_'):
                 continue
 

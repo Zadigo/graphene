@@ -1,9 +1,9 @@
 import functools
-from typing import Any, MutableMapping, Optional
+from typing import Any, Callable, MutableMapping, Optional
 
 from new_graphene.fields.arguments import Argument
-from new_graphene.fields.helpers import (ExplicitField, inspect_type,
-                                         source_resolver)
+from new_graphene.fields.helpers import ExplicitField, inspect_type
+from new_graphene.fields.resolvers import source_resolver
 from new_graphene.typings import (TypeArgument, TypeMapping, TypeObjectType,
                                   TypeResolver, TypeScalar)
 
@@ -56,6 +56,12 @@ class Field(ExplicitField):
         if required:
             pass
 
+        if isinstance(name, (Argument, ExplicitField)):
+            pass
+
+        if isinstance(source, (Argument, ExplicitField)):
+            pass
+
         self.field_type = field_type
         self.args = args or {}
         self.extra_args = extra_args
@@ -80,8 +86,8 @@ class Field(ExplicitField):
     def _get_type(self):
         return inspect_type(self.field_type)
 
-    def wrap_resolve(self, parent):
-        pass
+    def wrap_resolve(self, parent_resolver):
+        return self.resolver or parent_resolver
 
-    def wrap_subscribe(self, parent):
-        pass
+    def wrap_subscribe(self, parent: Callable | None):
+        return parent

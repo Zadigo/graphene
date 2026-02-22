@@ -33,3 +33,7 @@ def default_resolver(name: str, default_value, root, info: GraphQLResolveInfo, *
         func = dict_resolver if isinstance(root, dict) else attribute_resolver
         return func(name, default_value, root, info, **arguments)
     return resolver
+
+
+def source_resolver(source: str, root, info: GraphQLResolveInfo, **arguments):
+    pass
