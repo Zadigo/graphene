@@ -1,6 +1,7 @@
 
-from new_graphene.typings import (TypeArgument, TypeBaseOptions, TypeBaseType, TypeField,
-                                  TypeImplicitField, TypeScalar, TypeSchema)
+from new_graphene.typings import (TypeArgument, TypeBaseOptions, TypeBaseType,
+                                  TypeField, TypeImplicitField, TypeScalar,
+                                  TypeSchema)
 
 
 class PrintingMixin:
@@ -9,24 +10,23 @@ class PrintingMixin:
     @staticmethod
     def print_schema(schema: TypeSchema):
         return ''
-    
+
     @staticmethod
     def print_field(item: TypeField) -> str:
         name = item.name or item._meta.name
-        return f"<{name}: [{item.field_type}]>"
+        return f"<{name} :: [{item.field_type}]>"
 
     @staticmethod
     def print_argument(item: TypeArgument) -> str:
-        field_type = item.print_implicit_field(item.field_type)
-        return f"<Argument: [{item.name}] required={item.required} field_type={field_type}>"
+        return f"<Argument :: {item.name} -> {item.field_type._meta._class_name}>"
 
     @staticmethod
     def print_implicit_field(item: TypeImplicitField) -> str:
-        return f"<{item._meta.name}: {item.creation_counter}>"
+        return f"<{item._meta.name} :: {item.creation_counter}>"
 
     @staticmethod
     def print_scalar(item: TypeScalar) -> str:
-        return f"<{item._meta._internal_name}: [{item.creation_counter}]>"
+        return f"<{item._meta._internal_name} :: {item.creation_counter}>"
 
     @staticmethod
     def print_base_options(item: TypeBaseOptions) -> str:

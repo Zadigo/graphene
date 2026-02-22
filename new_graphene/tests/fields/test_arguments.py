@@ -31,5 +31,16 @@ class TestArgument(unittest.TestCase):
         # With ImplicitField
         result = Argument.translate_arguments({'name': String()})
         self.assertIn('name', result)
+
+    def test_with_both_args_and_extra_args(self):
+        # With args
+        result = Argument.translate_arguments(
+            {
+                'firstname': Argument(String)
+            },
+            extra_args={
+                'lastname': String()
+            }
+        )
         print(result)
         # self.assertEqual(result, {'name': String})
