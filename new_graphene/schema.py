@@ -6,7 +6,7 @@ from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
                      GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
                      GraphQLNamedType, GraphQLObjectType, GraphQLResolveInfo,
                      GraphQLScalarLiteralParser, GraphQLScalarValueParser,
-                     GraphQLSchema, GraphQLString)
+                     GraphQLSchema, GraphQLString, get_introspection_query)
 from graphql import graphql as agraphql
 from graphql import graphql_sync
 
@@ -14,6 +14,7 @@ from new_graphene.exceptions import GrapheneObjectTypeError
 # from new_graphene.fields.datatypes import ID, Float, Integer, Scalar, String
 from new_graphene.fields.datatypes import Scalar
 from new_graphene.fields.dynamic import Dynamic
+from new_graphene.fields.interface import Interface
 from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.fields.resolvers import default_resolver
 from new_graphene.grapqltypes import (GrapheneGraphqlObjectType,
@@ -23,7 +24,6 @@ from new_graphene.typings import (TypeAllTypes, TypeGraphqlExecuteOptions,
                                   TypeResolver, TypeScalar)
 from new_graphene.utils.base import get_unbound_function
 from new_graphene.utils.printing import PrintingMixin
-from new_graphene.fields.interface import Interface
 
 
 def resolve_for_subscription(root, info: GraphQLResolveInfo, **arguments):
@@ -403,7 +403,21 @@ class Schema(PrintingMixin):
         return lambda: item
 
     def instrospect(self):
-        pass
+        """Performs an introspection query against the schema to 
+        retrieve information about the types, fields, and other 
+        elements defined in the GraphQL schema. This method is 
+        useful for tools that need to understand the structure of 
+        the schema, such as GraphQL clients or documentation 
+        generators. The introspection query is a special GraphQL 
+        query that is designed to return metadata about the schema itself, 
+        allowing clients to dynamically discover the capabilities of the API."""
+        result = self.execute(get_introspection_query())
+        if result.errors:
+            raise Exception(
+                "Introspection query failed with "
+                f"errors: {result.errors}"
+            )
+        return result.data
 
     def execute(self, *args: TypeGraphqlExecuteOptions, **kwargs: TypeGraphqlExecuteOptions):
         """Executes a GraphQL query against the schema.
@@ -438,12 +452,6 @@ class Schema(PrintingMixin):
         """
         normalized_kwargs = self._normalize_kwargs(**kwargs)
         return agraphql(self._graphql_schema, *args, **normalized_kwargs)
-
-    def asubscribe(self, query, *args, **kwargs):
-        pass
-
-    def asubscribe(self, query, *args, **kwargs):
-        pass
 
     def asubscribe(self, query, *args, **kwargs):
         pass

@@ -50,3 +50,8 @@ class ObjectType(BaseType):
 
     is_object_type: ClassVar[bool] = True # TODO: Remove
     internal_type: ClassVar[ObjectTypesEnum] = ObjectTypesEnum.OBJECT_TYPE
+
+    def __call__(self, **kwargs):
+        if self._meta is None:
+            raise Exception("Meta class must be defined for ObjectType")
+        return self.dataclass_model(**kwargs)

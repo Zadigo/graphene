@@ -1,3 +1,4 @@
+import dataclasses
 import unittest
 
 from new_graphene.fields.base import Field
@@ -234,3 +235,12 @@ class TestObjectType(unittest.TestCase):
         print(MyType._meta.fields)
         self.assertIn('firstname', MyType._meta.fields)
         self.assertIn('lastname', MyType._meta.fields)
+
+    def test_call(self):
+        class MyObjectType(ObjectType):
+            firstname = String()
+
+        instance = MyObjectType()
+        result = instance(firstname="value")
+        self.assertTrue(dataclasses.is_dataclass(result))
+        self.assertEqual(result.firstname, "value")
