@@ -2,7 +2,8 @@ import unittest
 
 from graphql import GraphQLInt
 
-from new_graphene.fields.datatypes import Integer
+from new_graphene.fields.datatypes import Integer, String
+from new_graphene.fields.interface import Interface
 from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.schema import TypesContainer
 
@@ -111,8 +112,53 @@ class TestTypesContainer(unittest.TestCase):
         instance = TypesContainer()
 
         class SimpleType(ObjectType):
-            name = Integer()
+            name = String()
+            age = Integer()
 
         result = instance._translate_fields(SimpleType)
         self.assertIsNotNone(result)
-        self.assertIn('name', result)
+        self.assertIn('Name', result)
+        self.assertIn('Age', result)
+
+        print(result)
+
+    def test_translate_fields_with_subscription_resolver(self):
+        instance = TypesContainer()
+
+        class SimpleType(ObjectType):
+            name = String()
+            age = Integer()
+
+            def subscribe_name(self, info):
+                return "test"
+
+        result = instance._translate_fields(SimpleType)
+        self.assertIsNotNone(result)
+        self.assertIn('Name', result)
+        self.assertIn('Age', result)
+
+        print(result)
+
+    def test_translate_fields_with_interfaces(self):
+        instance = TypesContainer()
+
+        class MyInterface(Interface):
+            name = String()
+
+            class Meta:
+                name = "MyInterface"
+                description = "My interface description"
+
+        class SimpleType(ObjectType):
+            name = String()
+            age = Integer()
+
+            class Meta:
+                interfaces = [MyInterface]
+
+        result = instance._translate_fields(SimpleType)
+        self.assertIsNotNone(result)
+        self.assertIn('Name', result)
+        self.assertIn('Age', result)
+
+        print(result)

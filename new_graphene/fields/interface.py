@@ -1,14 +1,17 @@
+from typing import ClassVar
+
 from new_graphene.base import BaseType
+from new_graphene.utils.base import ObjectTypesEnum
 
 
 class Interface(BaseType):
     """An interface is an abstract type that includes a certain set of 
-    fields that a type must in order to resolve the possible types that
+    fields that a type must use in order to resolve the possible types that
     the field can resolve to. An `Interface` simply defines what types
     are possible for the field resolution.
-    
+
     .. code:: python
-    
+
         from new_graphene import Interface, String
 
         class HasAddress(Interface):
@@ -34,13 +37,14 @@ class Interface(BaseType):
 
             name = String()
 
-    
+
     Meta class options (optional):
         name (str): Name of the GraphQL type (must be unique in schema). Defaults to class name.
         description (str): Description of the GraphQL type in the schema. Defaults to class docstring.
     """
 
-    is_interface_type = True
+    is_interface_type = True  # TODO: Remove
+    internal_type: ClassVar[ObjectTypesEnum] = ObjectTypesEnum.INTERFACE
 
     def __init__(self, *args, **kwargs):
         raise TypeError("Interfaces cannot be instantiated directly.")

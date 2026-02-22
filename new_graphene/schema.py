@@ -56,6 +56,11 @@ class TypesContainer(dict):
 
         self.auto_camelcase = auto_camelcase
 
+    def _get_name(self, name: str) -> str:
+        if self.auto_camelcase:
+            return ''.join(word.capitalize() for word in name.split('_'))
+        return name
+
     def _check_types(self, value: Any):
         pass
 
@@ -154,6 +159,7 @@ class TypesContainer(dict):
                         deprecation_reason=arg.deprecation_reason,
                     )
 
+                # 1. Obtain the resolver for subscription
                 func_resolver = self._get_field_resolver(
                     graphene_type,
                     f"subscribe_{name}",
@@ -163,7 +169,9 @@ class TypesContainer(dict):
 
                 subscribe = field_obj.wrap_subscribe(func_resolver)
 
+                # 2. Obtain the resolver for the field
                 field_default_resolver: TypeResolver = None
+                # In suscription, use the identity resolver by default
                 if subscribe is not None:
                     field_default_resolver = resolve_for_subscription
 
@@ -173,14 +181,14 @@ class TypesContainer(dict):
                         _resolver, name, field_obj.default_value
                     )
 
-                func_for_type = self._get_field_resolver(
+                func_resolver = self._get_field_resolver(
                     graphene_type,
                     f"resolve_{name}",
                     name,
                     field_obj.default_value
                 )
                 partial_resolver = field_obj.wrap_resolve(
-                    func_for_type or field_default_resolver
+                    func_resolver or field_default_resolver
                 )
 
                 _final_field = GraphQLField(
@@ -192,7 +200,7 @@ class TypesContainer(dict):
                     deprecation_reason=field_obj.deprecation_reason
                 )
 
-            field_name = field_obj.name or self.get_name(name)
+            field_name = field_obj.name or self._get_name(name)
             _final_fields[field_name] = _final_field
 
         return _final_fields

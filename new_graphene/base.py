@@ -13,8 +13,8 @@ from new_graphene.utils.base import ObjectTypesEnum
 class BaseOptions:
     def __init__(self, cls: type['BaseTypeMetaclass'], **kwargs):
         self.cls = cls
-        # A custom name for the GraphQL type, 
-        # if not provided, it will default to the 
+        # A custom name for the GraphQL type,
+        # if not provided, it will default to the
         # class name
         self.name: Optional[str] = None
         self.description: Optional[str] = None
@@ -24,8 +24,8 @@ class BaseOptions:
         self.accepted_keys = {'name', 'description', 'interfaces', 'abstract'}
 
         self._base_meta: Optional[type] = None
-        # Internal name is used to store the name of 
-        # the type in the GraphQL schema, 
+        # Internal name is used to store the name of
+        # the type in the GraphQL schema,
         self._class_name: Optional[str] = None
         # Internal type name e.g. Query, Mutation etc.
         self._internal_name: Optional[str] = None
@@ -127,12 +127,9 @@ class BaseObjectType(type):
                 base_options.set_meta_option(key, value)
 
         if getattr(klass, 'is_interface_type', False):
-            interfaces: Sequence[TypeInterface] = getattr(
-                user_meta, 'interfaces', []
-            )
-            base_options.interfaces.extend(interfaces)
-            for interface in interfaces:
-                base_options.add_interface(interface)
+            base_options.build_fields(namespace)
+            klass.prepare(klass)
+            return klass
 
         # Dynamically create a dataclass for ObjectTypes to hold the field values,
         # only if the class is marked as an ObjectType. This allows us to have a
@@ -146,10 +143,15 @@ class BaseObjectType(type):
         if getattr(klass, 'is_object_type', False):
             filtered_fields = base_options.filter_fields(namespace)
 
+            # Add the fields of the interface on the ObjectType
+            interfaces = getattr(user_meta, 'interfaces', [])
+            for interface in interfaces:
+                filtered_fields.update(interface._meta.fields)
+
             if not filtered_fields:
                 return klass
 
-            base_options.build_fields(namespace)
+            base_options.build_fields(filtered_fields)
 
             _dataclass_fields = []
 
@@ -190,13 +192,23 @@ class BaseObjectType(type):
             dataclass = make_dataclass(name, _dataclass_fields, bases=())
             setattr(klass, 'dataclass_model', dataclass)
 
-        klass.prepare(klass)
+            klass.prepare(klass)
+            return klass
+
         return klass
 
     @classmethod
     def prepare(cls, klass: type['BaseTypeMetaclass']):
         """Finalizes the preparation of the ObjectType by setting 
         the name and description if they are not already set."""
+        pass
+
+    @classmethod
+    def prepare_objecttype(cls, klass: type['BaseObjectType'], base_options: BaseOptions):
+        pass
+
+    @classmethod
+    def prepare_interface(cls, klass: type['BaseObjectType'], base_options: BaseOptions):
         pass
 
 

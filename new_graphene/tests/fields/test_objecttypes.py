@@ -219,3 +219,18 @@ class TestObjectType(unittest.TestCase):
     #     assert MyObjectType._meta.name == "FooType"
     #     assert MyObjectType._meta.name == "FooType"
     #     assert MyObjectType._meta.name == "FooType"
+
+    def test_with_interface_implementaton(self):
+        class MyInterface(Interface):
+            firstname = String()
+
+        class MyType(ObjectType):
+            lastname = String()
+
+            class Meta:
+                interfaces = [MyInterface]
+
+        print(MyInterface._meta.fields)
+        print(MyType._meta.fields)
+        self.assertIn('firstname', MyType._meta.fields)
+        self.assertIn('lastname', MyType._meta.fields)
