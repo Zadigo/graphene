@@ -80,8 +80,8 @@ class Field(ExplicitField):
         if source is not None:
             self.resolver = functools.partial(source_resolver, source)
 
-    # def __repr__(self):
-    #     return f"<Field: {self.name or self.field_type._meta.name}>"
+    def __repr__(self) -> str:
+        return self.print_field(self)
 
     def _get_type(self):
         return inspect_type(self.field_type)

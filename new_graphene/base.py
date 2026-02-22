@@ -242,6 +242,9 @@ class BaseType(BaseTypeMetaclass):
     dataclass_model: Optional[TypeDataclass] = None
     internal_type: Optional[ObjectTypesEnum] = ObjectTypesEnum.NOT_DEFINED
 
+    def __str__(self):
+        return self._meta.print_base_type(self)
+
     def __repr__(self):
         return self._meta.print_base_type(self)
 

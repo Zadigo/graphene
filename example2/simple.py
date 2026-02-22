@@ -1,4 +1,3 @@
-
 from graphql import GraphQLResolveInfo
 
 from new_graphene.fields.base import Field
@@ -20,6 +19,7 @@ class Query(ObjectType):
         # return Patron(id=1, name="Syrus", age=27)
         # return 'Google'
         # return root.dataclass_model(id=1, name="Syrus", age=27)
+        print(root)
         return {"id": "1", "name": "Syrus", "age": 27}
 
 

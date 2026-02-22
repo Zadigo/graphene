@@ -57,10 +57,6 @@ class BaseField(PrintingMixin):
         self.args = args
         self.kwargs = kwargs
 
-    def __repr__(self) -> str:
-        name = self.__class__.__name__
-        return f"<{name}(args={self.args}, kwargs={self.kwargs})>"
-
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, BaseField):
             return self.creation_counter == other.creation_counter
@@ -125,6 +121,9 @@ class ExplicitField(BaseField):  # MountedType
         super().__init__(*args, **kwargs)
         self.field_type = field_type
 
+    def __repr__(self) -> str:
+        return self.print_field(self)
+
     @classmethod
     def mount(cls, item: ImplicitField):
         """Creates a new instance of the ExplicitField class by mounting an ImplicitField. 
@@ -188,9 +187,6 @@ class ImplicitField(BaseField):  # UnmountedType
     Args:
         counter (int, optional): The creation counter for the field. If not provided, it will be automatically assigned.
     """
-
-    def __repr__(self):
-        return self.print_implicit_field(self)
 
     def __eq__(self, other: TypeField | Any) -> bool:
         truth_array = [

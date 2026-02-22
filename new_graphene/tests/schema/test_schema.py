@@ -43,3 +43,17 @@ class TestSchema(unittest.TestCase):
             schema._graphql_schema.query_type.graphene_type,
             Query
         )
+
+    def test_schema_with_custom_field_type(self):
+        class UserDetails(ObjectType):
+            firstname = String()
+
+        class User(ObjectType):
+            details = Field(UserDetails)
+
+            def resolve_details(self, info):
+                return {'firstname': 'John'}
+
+        schema = Schema(query=User)
+        result = schema.execute("""query { details { firstname } }""")
+        print(result)

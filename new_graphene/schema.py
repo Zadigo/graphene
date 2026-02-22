@@ -19,9 +19,11 @@ from new_graphene.fields.resolvers import default_resolver
 from new_graphene.grapqltypes import (GrapheneGraphqlObjectType,
                                       GrapheneGraphqlScalarType)
 from new_graphene.typings import (TypeAllTypes, TypeGraphqlExecuteOptions,
-                                  TypeObjectType, TypeResolver, TypeScalar)
+                                  TypeGraphQlTypes, TypeObjectType,
+                                  TypeResolver, TypeScalar)
 from new_graphene.utils.base import get_unbound_function
 from new_graphene.utils.printing import PrintingMixin
+from new_graphene.fields.interface import Interface
 
 
 def resolve_for_subscription(root, info: GraphQLResolveInfo, **arguments):
@@ -208,6 +210,24 @@ class TypesContainer(dict):
     def _resolve_type(self, resolve_type_func, type_name, root, info, _type):
         pass
 
+    def get(self, key: str, default: Any = None) -> Optional[TypeGraphQlTypes]:
+        return super().get(key, default)
+
+    def items(self) -> Sequence[tuple[str, TypeGraphQlTypes]]:
+        return tuple(super().items())
+
+    def update(self, **kwargs: TypeGraphQlTypes) -> None:
+        return super().update(**kwargs)
+
+    def pop(self, key: str, default: Optional[TypeGraphQlTypes] = None) -> Optional[TypeGraphQlTypes]:
+        return super().pop(key, default)
+
+    def values(self) -> Sequence[TypeGraphQlTypes]:
+        return tuple(super().values())
+
+    def fromkeys(cls, iterable: Sequence[str], value: TypeGraphQlTypes) -> dict[str, TypeGraphQlTypes]:
+        return super().fromkeys(iterable, value)
+
     def add_to_self(self, graphene_type: TypeObjectType | TypeScalar | None) -> Optional[TypeObjectType]:
         """Checks the Graphene internal type against the existing fields in the container
         and then translates it to the corresponding GraphQL type if it is not already present.
@@ -230,8 +250,8 @@ class TypesContainer(dict):
             graphql_type = self.translate_scalar(graphene_type)
         elif issubclass(graphene_type, ObjectType):
             graphql_type = self.translate_objecttype(graphene_type)
-        # elif issubclass(graphene_type, Interface):
-        #     pass
+        elif issubclass(graphene_type, Interface):
+            pass
         # elif issubclass(graphene_type, Union):
         #     pass
         # elif issubclass(graphene_type, Enum):
@@ -418,6 +438,12 @@ class Schema(PrintingMixin):
         """
         normalized_kwargs = self._normalize_kwargs(**kwargs)
         return agraphql(self._graphql_schema, *args, **normalized_kwargs)
+
+    def asubscribe(self, query, *args, **kwargs):
+        pass
+
+    def asubscribe(self, query, *args, **kwargs):
+        pass
 
     def asubscribe(self, query, *args, **kwargs):
         pass

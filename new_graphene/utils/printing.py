@@ -1,5 +1,5 @@
 
-from new_graphene.typings import (TypeArgument, TypeBaseOptions, TypeBaseType,
+from new_graphene.typings import (TypeArgument, TypeBaseOptions, TypeBaseType, TypeField,
                                   TypeImplicitField, TypeScalar, TypeSchema)
 
 
@@ -9,6 +9,11 @@ class PrintingMixin:
     @staticmethod
     def print_schema(schema: TypeSchema):
         return ''
+    
+    @staticmethod
+    def print_field(item: TypeField) -> str:
+        name = item.name or item._meta.name
+        return f"<{name}: [{item.field_type}]>"
 
     @staticmethod
     def print_argument(item: TypeArgument) -> str:

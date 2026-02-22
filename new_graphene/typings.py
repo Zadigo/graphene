@@ -3,8 +3,9 @@ from typing import (TYPE_CHECKING, Any, Callable, ClassVar, Mapping,
                     runtime_checkable)
 
 from graphql import (ExecutionContext, GraphQLFieldResolver,
-                     GraphQLResolveInfo, GraphQLTypeResolver, Middleware,
-                     Source, ValueNode)
+                     GraphQLInterfaceType, GraphQLObjectType,
+                     GraphQLResolveInfo, GraphQLScalarType,
+                     GraphQLTypeResolver, Middleware, Source, ValueNode)
 
 if TYPE_CHECKING:
     from new_graphene.base import BaseOptions, BaseType
@@ -51,23 +52,25 @@ type TypeGraphqlExecuteArgs[T= TypeGraphqlExecuteOptions] = Sequence[T]
 type TypeImports = TypeScalar | TypeArgument | TypeInterface | TypeObjectType | TypeField | TypeSchema | Callable[
     ..., Any] | Any
 
+type TypeGraphQlTypes = GraphQLInterfaceType | GraphQLObjectType | GraphQLObjectType | GraphQLScalarType
+
 
 @runtime_checkable
 class TypeDataclass(Protocol):
     __dataclass_fields__: ClassVar[dict]
 
 
-class ScalarProtocol(Protocol):
-    is_scalar: ClassVar[bool]
+# class ScalarProtocol(Protocol):
+#     is_scalar: ClassVar[bool]
 
-    @staticmethod
-    def parse_literal(node: ValueNode, variables: Optional[dict[str, Any]] = None):
-        ...
+#     @staticmethod
+#     def parse_literal(node: ValueNode, variables: Optional[dict[str, Any]] = None):
+#         ...
 
-    @staticmethod
-    def resolve_value(value: Any):
-        ...
+#     @staticmethod
+#     def resolve_value(value: Any):
+#         ...
 
 
-class A(ScalarProtocol):
-    pass
+# class A(ScalarProtocol):
+#     pass

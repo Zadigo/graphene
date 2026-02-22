@@ -1,15 +1,18 @@
-from typing import Callable
+from typing import Any, Callable, MutableMapping
 
 from graphql import GraphQLResolveInfo
 
-from new_graphene.typings import TypeResolver
+from new_graphene.typings import TypeAllTypes, TypeResolver
 
 
-def attribute_resolver(name: str, default_value, root, info: GraphQLResolveInfo, **arguments):
+def attribute_resolver(name: str, default_value: TypeAllTypes, root: MutableMapping[str, Any], info: GraphQLResolveInfo, **arguments: Any):
     return getattr(root, name, default_value)
 
 
-def dict_resolver(name: str, default_value, root, info: GraphQLResolveInfo, **arguments):
+def dict_resolver(name: str, default_value: TypeAllTypes, root: MutableMapping[str, Any], info: GraphQLResolveInfo, **arguments: Any):
+    """Resolves a field value from a dictionary root object. It attempts 
+    to retrieve the value associated with the specified name key from the root dictionary. If the key 
+    is not found, it returns the provided default value."""
     return root.get(name, default_value)
 
 
@@ -29,11 +32,11 @@ def default_resolver() -> Callable[..., TypeResolver]:
         info (GraphQLResolveInfo): An object containing information about the execution state of the query, including the field being resolved, the path to the field, and any arguments passed to the field.
         **arguments (Any): Any additional arguments passed to the field resolver. These can be used to customize the resolution logic.
     """
-    def resolver(name: str, default_value, root, info: GraphQLResolveInfo, **arguments):
+    def resolver(name: str, default_value: TypeAllTypes, root: MutableMapping[str, Any], info: GraphQLResolveInfo, **arguments: Any):
         func = dict_resolver if isinstance(root, dict) else attribute_resolver
         return func(name, default_value, root, info, **arguments)
     return resolver
 
 
-def source_resolver(source: str, root, info: GraphQLResolveInfo, **arguments):
+def source_resolver(source: str, root: MutableMapping[str, Any], info: GraphQLResolveInfo, **arguments: Any):
     pass
