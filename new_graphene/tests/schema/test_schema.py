@@ -20,29 +20,24 @@ class TestSchema(unittest.TestCase):
     def test_schema_initialization(self):
         schema = Schema()
         self.assertIsInstance(schema, Schema)
-        self.assertIsNotNone(schema._graphql_schema)
+        self.assertIsNone(schema._graphql_schema)
 
     def test_schema_with_types(self):
         schema = Schema(query=Query)
-        self.assertIsNotNone(schema._graphql_schema)
+        self.assertIsNone(schema._graphql_schema)
 
         self.assertIsInstance(
-            schema._graphql_schema.query_type,
+            schema.graphql_schema.query_type,
             GraphQLObjectType
         )
 
-        self.assertIsInstance(
-            schema._graphql_schema.query_type.name,
+        self.assertEqual(
+            schema.graphql_schema.query_type.name,
             'Query'
         )
 
-        if schema._graphql_schema.query_type is None:
+        if schema.graphql_schema.query_type is None:
             self.fail("Query type is None")
-
-        self.assertIsInstance(
-            schema._graphql_schema.query_type.graphene_type,
-            Query
-        )
 
     def test_schema_with_custom_field_type(self):
         class UserDetails(ObjectType):

@@ -214,11 +214,12 @@ class TypeMap(dict):
         else:
             is_type_of = graphene_type.is_type_of
 
+        fields = partial(self.create_fields_for_type, graphene_type)
         return GrapheneObjectType(
             graphene_type=graphene_type,
             name=graphene_type._meta.name,
             description=graphene_type._meta.description,
-            fields=partial(self.create_fields_for_type, graphene_type),
+            fields=fields,
             is_type_of=is_type_of,
             interfaces=interfaces,
         )

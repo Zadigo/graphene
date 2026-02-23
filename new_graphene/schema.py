@@ -116,7 +116,7 @@ class TypesContainer(dict):
         return None
 
     # create_fields_for_type
-    def _translate_fields(self, graphene_type: Type[TypeObjectType], is_input_field: bool = False):
+    def _create_fields(self, graphene_type: Type[TypeObjectType], is_input_field: bool = False):
         """Translates the fields of a Graphene ObjectType to GraphQL fields. 
         This involves iterating over the fields defined in the Graphene ObjectType, 
         building the corresponding GraphQL field definitions, and handling any 
@@ -302,7 +302,7 @@ class TypesContainer(dict):
                 interfaces.append(self.add_to_self(interface))
             return interfaces
 
-        fields = self._translate_fields(graphene_type)
+        fields = functools.partial(self._create_fields, graphene_type)
         return GrapheneGraphqlObjectType(
             graphene_type._meta.name,
             graphene_type,

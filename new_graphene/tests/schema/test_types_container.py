@@ -1,7 +1,6 @@
 import unittest
 
-from graphql import GraphQLInt
-from grapqltypes import GrapheneGraphqlObjectType
+from graphql import GraphQLInt, GraphQLObjectType
 
 from new_graphene.fields.arguments import Argument
 from new_graphene.fields.base import Field
@@ -110,22 +109,39 @@ class TestTypesContainer(unittest.TestCase):
 
         result = instance.translate_objecttype(SimpleType)
         self.assertIsNotNone(result)
-        print(result)
-        self.assertIsInstance(result, GrapheneGraphqlObjectType)
+        self.assertIsInstance(result, GraphQLObjectType)
 
         print(result)
+        print(type(result))
 
-    def test_translate_fields(self):
+    def test_create_fields(self):
         instance = TypesContainer()
 
         class SimpleType(ObjectType):
             name = String()
             age = Integer()
 
-        result = instance._translate_fields(SimpleType)
+        result = instance._create_fields(SimpleType)
         self.assertIsNotNone(result)
-        self.assertIn('Name', result)
-        self.assertIn('Age', result)
+        self.assertIn('name', result)
+        self.assertIn('age', result)
+
+        print(result)
+
+    def test_create_fields_with_nested_types(self):
+        instance = TypesContainer()
+
+        class User(ObjectType):
+            name = String()
+            age = Integer()
+
+        class SimpleType(ObjectType):
+            users = Field(User, search=String())
+
+        result = instance._create_fields(SimpleType)
+
+        self.assertIsNotNone(result)
+        self.assertIn('users', result)
 
         print(result)
 

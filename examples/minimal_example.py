@@ -19,6 +19,7 @@ class Query(ObjectType):
 
 if __name__ == "__main__":
     s = Schema(query=Query)
+    # print(s.type_map.create_fields_for_type(Query))
     result = s.execute(
         """
         query {
@@ -28,4 +29,3 @@ if __name__ == "__main__":
         }
         """
     )
-    print(result)
