@@ -1,6 +1,6 @@
 import functools
 import inspect
-from typing import Any, Optional, Sequence, Type
+from typing import Any, Callable, Optional, Sequence, Type
 
 from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
                      GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
@@ -19,9 +19,10 @@ from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.fields.resolvers import default_resolver
 from new_graphene.grapqltypes import (GrapheneGraphqlObjectType,
                                       GrapheneGraphqlScalarType)
-from new_graphene.typings import (TypeAllTypes, TypeGraphqlExecuteOptions,
-                                  TypeGraphQlTypes, TypeObjectType,
-                                  TypeResolver, TypeScalar)
+from new_graphene.typings import (TypeAllTypes, TypeGrapheneTypes,
+                                  TypeGraphqlExecuteOptions, TypeGraphQlTypes,
+                                  TypeObjectType, TypeResolver,
+                                  TypeScalar)
 from new_graphene.utils.base import get_unbound_function
 from new_graphene.utils.printing import PrintingMixin
 
@@ -117,7 +118,7 @@ class TypesContainer(dict):
         return None
 
     # create_fields_for_type
-    def _translate_fields(self, graphene_type: TypeObjectType, is_input_field: bool = False):
+    def _translate_fields(self, graphene_type: Type[TypeObjectType], is_input_field: bool = False):
         """Translates the fields of a Graphene ObjectType to GraphQL fields. 
         This involves iterating over the fields defined in the Graphene ObjectType, 
         building the corresponding GraphQL field definitions, and handling any 
@@ -229,7 +230,7 @@ class TypesContainer(dict):
     def fromkeys(cls, iterable: Sequence[str], value: TypeGraphQlTypes) -> dict[str, TypeGraphQlTypes]:
         return super().fromkeys(iterable, value)
 
-    def add_to_self(self, graphene_type: TypeObjectType | TypeScalar | None) -> Optional[TypeObjectType]:
+    def add_to_self(self, graphene_type: TypeGrapheneTypes | Callable[..., TypeGrapheneTypes] | None):
         """Checks the Graphene internal type against the existing fields in the container
         and then translates it to the corresponding GraphQL type if it is not already present.
         """
@@ -252,7 +253,7 @@ class TypesContainer(dict):
         elif issubclass(graphene_type, ObjectType):
             graphql_type = self.translate_objecttype(graphene_type)
         elif issubclass(graphene_type, Interface):
-            pass
+            graphene_type = None
         # elif issubclass(graphene_type, Union):
         #     pass
         # elif issubclass(graphene_type, Enum):
@@ -269,7 +270,7 @@ class TypesContainer(dict):
         self[name] = graphql_type
         return graphql_type
 
-    def translate_scalar(self, value: TypeScalar):
+    def translate_scalar(self, value: Type[TypeScalar]):
         scalars: dict[TypeScalar, GraphQLNamedType] = {
             'String': GraphQLString,
             'Integer': GraphQLInt,
@@ -277,7 +278,7 @@ class TypesContainer(dict):
             'Boolean': GraphQLBoolean,
             'ID': GraphQLID
         }
-
+        # TODO: Use "value.internal_type.value"
         if value._meta._class_name in scalars:
             return scalars[value._meta._class_name]
 
@@ -301,7 +302,7 @@ class TypesContainer(dict):
             parse_literal=parse_literal
         )
 
-    def translate_objecttype(self, graphene_type: TypeObjectType):
+    def translate_objecttype(self, graphene_type: Type[TypeObjectType]):
         def interfaces():
             interfaces = []
             for interface in graphene_type._meta.interfaces:
@@ -455,4 +456,7 @@ class Schema(PrintingMixin):
         return agraphql(self._graphql_schema, *args, **normalized_kwargs)
 
     def asubscribe(self, query, *args, **kwargs):
+        pass
+        pass
+        pass
         pass

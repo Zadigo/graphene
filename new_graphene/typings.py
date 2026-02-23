@@ -1,5 +1,6 @@
 from typing import (TYPE_CHECKING, Any, Callable, ClassVar, Mapping,
-                    MutableMapping, Protocol, Sequence, runtime_checkable)
+                    MutableMapping, Protocol, Sequence, Type,
+                    runtime_checkable)
 
 from graphql import (ExecutionContext, GraphQLFieldResolver,
                      GraphQLInterfaceType, GraphQLObjectType,
@@ -42,6 +43,8 @@ type TypeSchema = Schema
 
 type TypeArgument = Argument
 
+type TypeGrapheneTypes = Type[TypeObjectType | TypeInterface | TypeScalar | TypeArgument]
+
 type TypeMapping[T] = MutableMapping[str, T]
 
 type TypeGraphqlExecuteOptions = str | bool | Source | GraphQLFieldResolver | GraphQLTypeResolver | type[
@@ -78,4 +81,7 @@ class TypeDataclass(Protocol):
 
 
 # class A(ScalarProtocol):
+#     pass
+#     pass
+#     pass
 #     pass
