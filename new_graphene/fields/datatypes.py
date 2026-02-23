@@ -31,7 +31,6 @@ class Scalar[T= Any](ImplicitField):
             age = Scalar()
     """
 
-    is_scalar: ClassVar[bool] = True  # TODO: Remove
     internal_type: ClassVar[ObjectTypesEnum] = ObjectTypesEnum.SCALAR
 
     def __repr__(self):
@@ -207,11 +206,12 @@ class Float(Scalar[float]):
         return Undefined
 
     @staticmethod
-    def resolve_value(value):
+    def parse_value(value):
         try:
             value = float(value)
         except ValueError:
             return Undefined
+        return value
 
 
 class String(Scalar[str]):
@@ -226,13 +226,17 @@ class String(Scalar[str]):
     """
 
     @staticmethod
+    def serialize(value):
+        return value
+
+    @staticmethod
     def parse_literal(node, variables=None):
         if isinstance(node, StringValueNode):
             return node.value
         return Undefined
-
+    
     @staticmethod
-    def resolve_value(value):
+    def parse_value(value):
         if isinstance(value, bool):
             return 'true' if value else 'false'
         return str(value)

@@ -14,9 +14,7 @@ from new_graphene.utils.printing import PrintingMixin
 class BaseOptions(PrintingMixin):
     def __init__(self, klass: type['BaseObjectType']):
         self.cls = klass
-        # A custom name for the GraphQL type,
-        # if not provided, it will default to the
-        # class name
+        # A custom name for the GraphQL type
         self.name: Optional[str] = None
         self.description: Optional[str] = None
 
@@ -27,10 +25,11 @@ class BaseOptions(PrintingMixin):
         self._base_meta: Optional[type] = None
         # Internal name is used to store the name of
         # the type in the GraphQL schema,
-        self._class_name: Optional[str] = None
-        # Internal type name e.g. Query, Mutation etc.
-        self._internal_name: Optional[str] = None
+        self._internal_name: Optional[str] = klass.__name__
         self.default_resolver: Optional[TypeResolver] = None
+
+        if self.name is None:
+            self.name = self._internal_name
 
     def __repr__(self):
         return self.print_base_options(self)
@@ -56,7 +55,7 @@ class BaseOptions(PrintingMixin):
         iternal_keys = {'_meta', 'is_object_type'}
         user_defined_fields = {}
 
-        for key, value in namespace:
+        for key, field_obj in namespace:
             if key.startswith('_'):
                 continue
 
@@ -69,7 +68,7 @@ class BaseOptions(PrintingMixin):
                 # the user defined field
                 pass
 
-            user_defined_fields[key] = value
+            user_defined_fields[key] = field_obj
         return user_defined_fields
 
     def build_fields(self, namespace: Mapping[str, Any] | Sequence[tuple[str, Any]]):
@@ -78,10 +77,11 @@ class BaseOptions(PrintingMixin):
 
         user_defined_fields = self.filter_fields(namespace)
 
-        for key, value in user_defined_fields.items():
-            field = get_field_as(value, Field)
+        for key, field_obj in user_defined_fields.items():
+            field = get_field_as(field_obj, Field)
             if field is not None:
                 self.fields[key] = field
+                field_obj.creation_counter += 1
         return self.fields
 
     def add_field(self, name: str, field: TypeExplicitField):
@@ -91,8 +91,8 @@ class BaseOptions(PrintingMixin):
     def add_interface(self, interface: TypeInterface):
         """Adds an interface to the ObjectType"""
         fields = self.filter_fields(interface.__dict__)
-        for key, value in fields.items():
-            self.add_field(key, get_field_as(value, Field))
+        for key, field_obj in fields.items():
+            self.add_field(key, get_field_as(field_obj, Field))
 
 
 class BaseObjectType(type):
@@ -109,14 +109,12 @@ class BaseObjectType(type):
 
         base_options = BaseOptions(klass)
         setattr(klass, '_meta', base_options)
-        base_options.name = name
-        base_options._class_name = name
-        base_options._internal_name = name
 
         internal_type = getattr(klass, 'internal_type', None)
-        if internal_type is not None:
-            if internal_type != ObjectTypesEnum.NOT_DEFINED:
-                base_options._internal_name = internal_type.value
+        if internal_type is None:
+            raise TypeError(
+                f"Class {name} must define an internal_type attribute"
+            )
 
         if base_options.description is None and klass.__doc__ is not None:
             base_options.description = inspect.cleandoc(klass.__doc__)
@@ -132,7 +130,7 @@ class BaseObjectType(type):
             for key, value in user_meta.__dict__.items():
                 base_options.set_meta_option(key, value)
 
-        if getattr(klass, 'is_interface_type', False):
+        if internal_type == ObjectTypesEnum.INTERFACE:
             base_options.build_fields(namespace)
             klass.prepare(klass)
             return klass
@@ -146,7 +144,7 @@ class BaseObjectType(type):
         # BaseOptions, but only
         from new_graphene.fields.base import Field
 
-        if getattr(klass, 'is_object_type', False):
+        if internal_type == ObjectTypesEnum.OBJECT_TYPE:
             filtered_fields = base_options.filter_fields(namespace)
 
             # Add the fields of the interface on the ObjectType
@@ -235,10 +233,6 @@ class BaseType(BaseTypeMetaclass):
         * abstract (bool): If True, the type is marked as abstract and cannot be instantiated directly. This is useful for creating base types that are meant to beinherited by other types. Defaults to False.
     """
 
-    # This is used to mark the class as an ObjectType,
-    # so that the dataclass is created for it
-    is_object_type: bool = False  # TODO: Remove
-    is_interface_type: bool = False  # TODO: Remove
     dataclass_model: Optional[TypeDataclass] = None
     internal_type: Optional[ObjectTypesEnum] = ObjectTypesEnum.NOT_DEFINED
 

@@ -9,10 +9,15 @@ from new_graphene.fields.objecttypes import ObjectType
 
 class TestBaseOptions(unittest.TestCase):
     def test_base_options(self):
-        options = BaseOptions(cls=BaseType)
+        options = BaseOptions(BaseType)
         self.assertEqual(options.cls, BaseType)
-        self.assertIsNone(options.name)
+        self.assertIsNotNone(options.name)
+        self.assertIsNotNone(options._internal_name)
         self.assertIsNone(options.description)
+        self.assertEqual(
+            repr(options),
+            "<BaseTypeOptions for BaseType>"
+        )
 
     def test_check_meta_options(self):
         class SimpleType(ObjectType):
@@ -20,7 +25,7 @@ class TestBaseOptions(unittest.TestCase):
                 name = 'SimpleType'
                 description = 'A simple type for testing'
 
-        options = BaseOptions(cls=SimpleType)
+        options = BaseOptions(SimpleType)
         options.check_meta_options(SimpleType._meta._base_meta.__dict__.keys())
 
     @unittest.expectedFailure
@@ -31,7 +36,7 @@ class TestBaseOptions(unittest.TestCase):
                 description = 'A simple type for testing'
                 invalid_option = 'This is an invalid option'
 
-        options = BaseOptions(cls=SimpleType)
+        options = BaseOptions(SimpleType)
         keys = SimpleType._meta._base_meta.__dict__.keys()
 
         with self.assertRaises(InvalidMetaOptionsError):
@@ -42,7 +47,7 @@ class TestBaseOptions(unittest.TestCase):
             field1 = Field(String)
             _internal_field = Field(String)
 
-        options = BaseOptions(cls=SimpleType)
+        options = BaseOptions(SimpleType)
         filtered_fields = options.filter_fields(SimpleType.__dict__)
 
         self.assertIn('field1', filtered_fields)
@@ -53,7 +58,7 @@ class TestBaseOptions(unittest.TestCase):
             field1 = Field(String)
             field2 = Field(String)
 
-        options = BaseOptions(cls=SimpleType)
+        options = BaseOptions(SimpleType)
         options.build_fields(SimpleType.__dict__)
 
         self.assertIn('field1', options.fields)
@@ -66,7 +71,7 @@ class TestBaseOptions(unittest.TestCase):
         class SimpleType(ObjectType):
             pass
 
-        options = BaseOptions(cls=SimpleType)
+        options = BaseOptions(SimpleType)
         new_field = Field(String)
         options.add_field('new_field', new_field)
 
@@ -84,6 +89,9 @@ class TestBaseType(unittest.TestCase):
         self.assertEqual(instance._meta.cls, BaseType)
         self.assertIsInstance(instance._meta, BaseOptions)
         self.assertEqual(instance._meta.cls, BaseType)
+        self.assertEqual(repr(instance), "<BaseType>")
+
+        print(instance)
 
     def test_base_type_meta_class(self):
         instance = BaseTypeMetaclass()

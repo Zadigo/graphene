@@ -72,12 +72,10 @@ class BaseField(PrintingMixin):
 
     creation_counter: int = 1
     is_mounted: bool = False
-    is_scalar: bool = False  # TODO: Remove
     internal_type: Optional[ObjectTypesEnum] = ObjectTypesEnum.FIELD
     _meta: Optional[BaseFieldOptions]
 
-    def __init__(self, *args: TypeArgument, counter: Optional[int] = None, **kwargs: TypeArgument):
-        self.creation_counter = counter or self.increase_counter()
+    def __init__(self, *args: TypeArgument, **kwargs: TypeArgument):
         self.args = args
         self.kwargs = kwargs
         self._arguments: dict[str, TypeArgument] = {}
@@ -108,10 +106,7 @@ class BaseField(PrintingMixin):
         not have a type, it should raise a NotImplementedError."""
         raise NotImplementedError
 
-    def increase_counter(self) -> int:
-        self.creation_counter += 1
-        return self.creation_counter
-
+    @deprecated("This method will be removed in a future version.")
     def reset_counter(self):
         self.creation_counter = self.increase_counter()
 
@@ -143,8 +138,15 @@ class ExplicitField(BaseField, metaclass=BaseFieldType):  # MountedType
 
     is_mounted: bool = True
 
-    def __init__(self, field_type: TypeScalar | TypeObjectType, *args, counter: Optional[int] = None, **kwargs):
-        super().__init__(*args, counter=counter, **kwargs)
+    def __init__(self, field_type: Type[TypeScalar | TypeObjectType], *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if not inspect.isclass(field_type) and not issubclass(field_type, (TypeScalar, TypeObjectType)):
+            raise TypeError(
+                f"Expected a class of type TypeScalar or TypeObjectType, "
+                f"got {type(field_type).__name__}"
+            )
+
         self.field_type = field_type
 
     def __repr__(self) -> str:
@@ -171,7 +173,6 @@ class ExplicitField(BaseField, metaclass=BaseFieldType):  # MountedType
         instance = cls(
             item._get_type(),
             *item.args,
-            counter=item.creation_counter,
             **item.kwargs
         )
 

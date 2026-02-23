@@ -29,12 +29,18 @@ class TestObjectType(unittest.TestCase):
         class CarsType(ObjectType):
             pass
 
+        self.assertIsNotNone(CarsType.internal_type)
         self.assertEqual(CarsType.internal_type, ObjectTypesEnum.OBJECT_TYPE)
         self.assertIsNotNone(CarsType._meta.name)
         self.assertIsNone(CarsType._meta.description)
         self.assertEqual(CarsType._meta.interfaces, [])
         self.assertEqual(CarsType._meta.fields, {})
         self.assertIsNotNone(CarsType._meta._internal_name)
+
+        instance = CarsType()
+        self.assertTrue(callable(instance))
+
+        print(CarsType)
 
     def test_implementation_with_meta(self):
         class CarsWithMetaType(ObjectType):
@@ -43,7 +49,10 @@ class TestObjectType(unittest.TestCase):
                 description = 'A type representing cars with meta information'
 
         self.assertEqual(CarsWithMetaType._meta.name, "cars")
-        self.assertEqual(CarsWithMetaType._meta._internal_name, "ObjectType")
+        self.assertEqual(
+            CarsWithMetaType._meta._internal_name,
+            "CarsWithMetaType"
+        )
 
         self.assertEqual(
             CarsWithMetaType._meta.description,

@@ -50,7 +50,6 @@ class ObjectType(BaseType):
         * fields (Dict[str, graphene.Field]): A dictionary of field names to Field instances. This is used to define the fields of the object type.
     """
 
-    is_object_type: ClassVar[bool] = True  # TODO: Remove
     internal_type: ClassVar[ObjectTypesEnum] = ObjectTypesEnum.OBJECT_TYPE
 
     def __call__(self, **kwargs) -> TypeDataclass:

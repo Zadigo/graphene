@@ -14,6 +14,10 @@ class User(ObjectType):
 class Query(ObjectType):
     users = Field(User, search=String())
 
+    class Meta:
+        name = 'Perceptron'
+        description = 'A simple query for testing'
+
     def resolve_users(root, info: GraphQLResolveInfo, search: str = None):
         return {'name': faker.name()}
 
@@ -30,3 +34,5 @@ if __name__ == "__main__":
         }
         """
     )
+    # print(vars(s.graphql_schema))
+    # print(result.data)
