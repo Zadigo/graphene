@@ -5,7 +5,6 @@ from typing import Any, Callable, Optional, Sequence, Type
 from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
                      GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
                      GraphQLNamedType, GraphQLObjectType, GraphQLResolveInfo,
-                     GraphQLScalarLiteralParser, GraphQLScalarValueParser,
                      GraphQLSchema, GraphQLString, get_introspection_query)
 from graphql import graphql as agraphql
 from graphql import graphql_sync
@@ -21,8 +20,7 @@ from new_graphene.grapqltypes import (GrapheneGraphqlObjectType,
                                       GrapheneGraphqlScalarType)
 from new_graphene.typings import (TypeAllTypes, TypeGrapheneTypes,
                                   TypeGraphqlExecuteOptions, TypeGraphQlTypes,
-                                  TypeObjectType, TypeResolver,
-                                  TypeScalar)
+                                  TypeObjectType, TypeResolver, TypeScalar)
 from new_graphene.utils.base import get_unbound_function
 from new_graphene.utils.printing import PrintingMixin
 
@@ -278,28 +276,23 @@ class TypesContainer(dict):
             'Boolean': GraphQLBoolean,
             'ID': GraphQLID
         }
+
         # TODO: Use "value.internal_type.value"
         if value._meta._class_name in scalars:
             return scalars[value._meta._class_name]
 
-        parse_value: Optional[GraphQLScalarValueParser] = getattr(
-            value,
-            'parse_value',
-            None
-        )
-
-        parse_literal: Optional[GraphQLScalarLiteralParser] = getattr(
-            value,
-            'parse_literal',
-            None
-        )
+        serialize = getattr(value, 'serialize', None)
+        parse_value = getattr(value, 'parse_value', None)
+        parse_literal = getattr(value, 'parse_literal', None)
 
         return GrapheneGraphqlScalarType(
+            value._meta.name,
             value,
-            description=value._meta.description,
-            serialize=parse_value,
+            serialize=serialize,
             parse_value=parse_value,
-            parse_literal=parse_literal
+            parse_literal=parse_literal,
+            description=value._meta.description,
+            extensions=None
         )
 
     def translate_objecttype(self, graphene_type: Type[TypeObjectType]):
@@ -312,9 +305,11 @@ class TypesContainer(dict):
         fields = self._translate_fields(graphene_type)
         return GrapheneGraphqlObjectType(
             graphene_type._meta.name,
-            fields,
+            graphene_type,
+            fields=fields,
             interfaces=interfaces,
             is_type_of=None,
+            extensions=None,
             description=graphene_type._meta.description
         )
 
@@ -369,7 +364,7 @@ class Schema(PrintingMixin):
             auto_camelcase=auto_camelcase
         )
 
-        self._graphql_schema = GraphQLSchema(
+        self.graphql_schema = GraphQLSchema(
             query=self._types_container.query,
             mutation=self._types_container.mutation,
             subscription=self._types_container.subscription,
@@ -434,7 +429,7 @@ class Schema(PrintingMixin):
                 - operation_name: The name of the operation to execute (if the query contains multiple operations)
         """
         normalized_kwargs = self._normalize_kwargs(**kwargs)
-        return graphql_sync(self._graphql_schema, *args, **normalized_kwargs)
+        return graphql_sync(self.graphql_schema, *args, **normalized_kwargs)
 
     def aexecute(self, *args: TypeGraphqlExecuteOptions, **kwargs: TypeGraphqlExecuteOptions):
         """Asynchronous version of the execute method. 
@@ -453,10 +448,7 @@ class Schema(PrintingMixin):
                 - operation_name: The name of the operation to execute (if the query contains multiple operations)
         """
         normalized_kwargs = self._normalize_kwargs(**kwargs)
-        return agraphql(self._graphql_schema, *args, **normalized_kwargs)
+        return agraphql(self.graphql_schema, *args, **normalized_kwargs)
 
     def asubscribe(self, query, *args, **kwargs):
-        pass
-        pass
-        pass
         pass

@@ -16,7 +16,7 @@ class User(ObjectType):
 class Query(ObjectType):
     users = Field(User, search=String())
 
-    def resolve_users(root, info: GraphQLResolveInfo, search=None):
+    def resolve_users(root, info: GraphQLResolveInfo, search: str = None):
         return {'name': faker.name()}
 
 
@@ -25,9 +25,9 @@ if __name__ == "__main__":
     result = s.execute(
         """
         query {
-          users(search: "John") {
-            name
-          }
+            users(search: "John") {
+                name
+            }
         }
         """
     )

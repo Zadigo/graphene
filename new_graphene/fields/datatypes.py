@@ -16,7 +16,7 @@ MAX_INT = 2147483647
 MIN_INT = -2147483648
 
 
-class Scalar[T= Any](ImplicitField, BaseType):
+class Scalar[T = Any](ImplicitField, BaseType):
     """A scalar type represents a primitive value in GraphQL. It is used to define fields 
     that return simple values such as strings, numbers, or booleans. Each specific scalar 
     type (e.g., Integer, String, Boolean) will implement the parsing and resolution logic 
@@ -32,16 +32,24 @@ class Scalar[T= Any](ImplicitField, BaseType):
             age = Scalar()
     """
 
-    is_scalar: ClassVar[bool] = True # TODO: Remove
+    is_scalar: ClassVar[bool] = True  # TODO: Remove
     internal_type: ClassVar[ObjectTypesEnum] = ObjectTypesEnum.SCALAR
 
     def __repr__(self):
         return self.print_scalar(self)
 
     @staticmethod
+    def serialize(value: T) -> T:
+        """Serializes an internal value to include in a response.
+
+        This default method just passes the value through and should be replaced
+        with a more specific version when creating a scalar type.
+        """
+        return value
+
+    @staticmethod
     def parse_literal(node: ValueNode, variables: Optional[dict[str, Any]] = None) -> T:
-        """Parse a GraphQL literal value into a Python value. This method should be
-        implemented by each specific scalar type to handle the parsing logic for that type.
+        """Parse an external GraphQL literal value into an internal Python value.
 
         This method is used in `GrapheneGraphqlScalarType.parse_literal` to convert GraphQL literals 
         into Python values when processing queries.
@@ -53,7 +61,7 @@ class Scalar[T= Any](ImplicitField, BaseType):
         raise NotImplementedError(f"parse_literal not implemented")
 
     @staticmethod
-    def resolve_value(value: Any) -> T:
+    def parse_value(value: Any) -> T:
         """Resolve a Python value into the appropriate type for this scalar. This method should be
         implemented by each specific scalar type to handle the resolution logic for that type.
 

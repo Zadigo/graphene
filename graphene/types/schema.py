@@ -88,24 +88,32 @@ class TypeMap(dict):
         self.subscription = create_graphql_type(
             subscription) if subscription else None
 
-        self.types = [create_graphql_type(graphene_type)
-                      for graphene_type in types]
+        self.types = [
+            create_graphql_type(graphene_type)
+            for graphene_type in types
+        ]
 
     def add_type(self, graphene_type):
         if inspect.isfunction(graphene_type):
             graphene_type = graphene_type()
+        
         if isinstance(graphene_type, List):
             return GraphQLList(self.add_type(graphene_type.of_type))
+        
         if isinstance(graphene_type, NonNull):
             return GraphQLNonNull(self.add_type(graphene_type.of_type))
+        
         try:
             name = graphene_type._meta.name
         except AttributeError:
             raise TypeError(
                 f"Expected Graphene type, but received: {graphene_type}.")
+        
         graphql_type = self.get(name)
+        
         if graphql_type:
             return graphql_type
+        
         if issubclass(graphene_type, ObjectType):
             graphql_type = self.create_objecttype(graphene_type)
         elif issubclass(graphene_type, InputObjectType):
@@ -121,6 +129,7 @@ class TypeMap(dict):
         else:
             raise TypeError(
                 f"Expected Graphene type, but received: {graphene_type}.")
+        
         self[name] = graphql_type
         return graphql_type
 
@@ -422,13 +431,14 @@ class Schema:
             query, mutation, subscription, types, auto_camelcase=auto_camelcase
         )
         self.type_map = type_map
-        self.graphql_schema = GraphQLSchema(
+        graphql_schema = GraphQLSchema(
             type_map.query,
             type_map.mutation,
             type_map.subscription,
             type_map.types,
             directives,
         )
+        self.graphql_schema = graphql_schema
 
     def __str__(self):
         return print_schema(self.graphql_schema)
