@@ -20,15 +20,16 @@ class Argument(ExplicitField):
         from new_graphene import ObjectType, Field, String, Argument
 
         class Cars(ObjectType):
-            name = Field(String, args={'input': Argument(String)}, description='The name of the car')
+            name = Field(String, args={'search': Argument(String)})
+            lastname = Field(String, search=Argument(String))
 
     Providing an argument on an ImplicitField does the exact same thing as the above example, but is more concise:
 
     .. code-block:: python
-        from new_graphene import ObjectType, Field, String, Argument
+        from new_graphene import ObjectType, String
 
         class Cars(ObjectType):
-            name = String(name=String(description="The name of the car"))
+            name = String(search=String(description="The name of the car"))
 
     Which is equivalent to:
 
@@ -36,7 +37,7 @@ class Argument(ExplicitField):
         from new_graphene import ObjectType, String, Argument
 
         class Cars(ObjectType):
-            name = string(name=Argument(String))
+            name = String(search=Argument(String))
 
     Args:
         field_type (TypeScalar): The type of the argument in the GraphQL schema. This can be a scalar type, an object type, an enum, an interface, or a union.
@@ -71,6 +72,8 @@ class Argument(ExplicitField):
 
     @classmethod
     def translate_arguments(cls, field_obj: TypeField) -> MutableMapping[str, 'Argument']:
+        """Translate a set of arguments provided to a field into instances of the `Argument` class.
+        Invalid arguments will raise `ValueError`."""
         from new_graphene.fields.base import Field
         from new_graphene.fields.input import InputField
 
@@ -98,6 +101,9 @@ class Argument(ExplicitField):
                 raise ValueError(
                     f"Expected {key} to be Argument, but received {type(value).__name__}. Try using Argument({value.field_type})."
                 )
+            
+            if instance is None and isinstance(value, cls):
+                instance = value
 
             if instance is not None:
                 if not isinstance(instance, Argument):

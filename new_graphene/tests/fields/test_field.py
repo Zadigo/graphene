@@ -30,17 +30,22 @@ class TestField(unittest.TestCase):
                 'extra': 'Wrong extra argument'
             }
         )
+
+        print(instance)
+        print(instance.args, instance.extra_args, instance._arguments)
+
         self.assertIsNotNone(instance.description)
         self.assertTrue(instance.creation_counter > 1)
         self.assertEqual(instance.name, 'testField')
         self.assertTrue(callable(instance.resolver))
         self.assertIn('input', instance._arguments)
-        self.assertIn('extra', instance.extra_args)
-
-        print(instance)
-        print(instance.args, instance.extra_args, instance._arguments)
+        self.assertNotIn('extra', instance.extra_args)
 
     def test_argument_scalar_instance(self):
         instance = Field(String, search=String())
         self.assertIn('search', instance._arguments)
         self.assertIsInstance(instance._arguments['search'], Argument)
+
+    def test_passing_a_none_type(self):
+        with self.assertRaises(TypeError):
+            Field(None)

@@ -38,9 +38,14 @@ class Field(ExplicitField):
     def __init__(self, field_type: type[TypeScalar | TypeObjectType], args: Optional[TypeMapping[TypeArgument]] = None, resolver: Optional[TypeResolver] = None, source: Optional[str] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None, default_value: Optional[TypeScalar] = None, **extra_args: Any):
         super().__init__(field_type, counter=creation_counter)
 
+        if not isinstance(field_type, type):
+            raise TypeError(
+                f"Expected field_type to be a type, got {type(field_type).__name__}"
+            )
+
         if args is not None and not isinstance(args, MutableMapping):
             raise TypeError(
-                f"Expected args to be a Mapping, got {type(args).__name__}"
+                f"Expected args to be a MutableMapping, got {type(args).__name__}"
             )
 
         if source is not None and resolver is not None:
@@ -63,8 +68,8 @@ class Field(ExplicitField):
             pass
 
         self.field_type = field_type
-        self.args = args or {} # TODO: Remove
-        self.extra_args = extra_args # TODO: Remove
+        self.args = args or {}  # TODO: Remove
+        self.extra_args = extra_args  # TODO: Remove
         self._arguments = Argument.translate_arguments(self)
         self.resolver = resolver
         self.deprecation_reason = deprecation_reason

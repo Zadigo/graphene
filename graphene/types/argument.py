@@ -1,4 +1,5 @@
 from itertools import chain
+
 from graphql import Undefined
 
 from .dynamic import Dynamic
@@ -81,16 +82,18 @@ class Argument(MountedType):
 
 
 def to_arguments(args, extra_args=None):
-    from .unmountedtype import UnmountedType
     from .field import Field
     from .inputfield import InputField
+    from .unmountedtype import UnmountedType
 
     if extra_args:
         extra_args = sorted(extra_args.items(), key=lambda f: f[1])
     else:
         extra_args = []
+
     iter_arguments = chain(args.items(), extra_args)
     arguments = {}
+
     for default_name, arg in iter_arguments:
         if isinstance(arg, Dynamic):
             arg = arg.get_type()
@@ -117,6 +120,4 @@ def to_arguments(args, extra_args=None):
         ), f'More than one Argument have same name "{arg_name}".'
         arguments[arg_name] = arg
 
-    return arguments
-    return arguments
     return arguments
