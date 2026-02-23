@@ -1,5 +1,7 @@
 from typing import ClassVar
 
+from new_graphene.typings import TypeDataclass
+
 from new_graphene.base import BaseType
 from new_graphene.utils.base import ObjectTypesEnum
 
@@ -40,18 +42,18 @@ class ObjectType(BaseType):
         print(person.age)   # Output: 30
 
     Meta class options (optional):
-        name (str): Name of the GraphQL type (must be unique in schema). Defaults to class name.
-        description (str): Description of the GraphQL type in the schema. Defaults to class docstring.
-        interfaces (Iterable[graphene.Interface]): GraphQL interfaces to extend with this object. All fields from interface will be included in this object's schema.
-        possible_types (Iterable[graphene.ObjectType]): GraphQL object types that implement this interface. Used for type resolution in interfaces and unions.
-        default_resolver (Callable): Default resolver function for fields in this object type. If not provided, the default resolver will be used.
-        fields (Dict[str, graphene.Field]): A dictionary of field names to Field instances. This is used to define the fields of the object type.
+        * name (str): Name of the GraphQL type (must be unique in schema). Defaults to class name.
+        * description (str): Description of the GraphQL type in the schema. Defaults to class docstring.
+        * interfaces (Iterable[graphene.Interface]): GraphQL interfaces to extend with this object. All fields from interface will be included in this object's schema.
+        * possible_types (Iterable[graphene.ObjectType]): GraphQL object types that implement this interface. Used for type resolution in interfaces and unions.
+        * default_resolver (Callable): Default resolver function for fields in this object type. If not provided, the default resolver will be used.
+        * fields (Dict[str, graphene.Field]): A dictionary of field names to Field instances. This is used to define the fields of the object type.
     """
 
-    is_object_type: ClassVar[bool] = True # TODO: Remove
+    is_object_type: ClassVar[bool] = True  # TODO: Remove
     internal_type: ClassVar[ObjectTypesEnum] = ObjectTypesEnum.OBJECT_TYPE
 
-    def __call__(self, **kwargs):
+    def __call__(self, **kwargs) -> TypeDataclass:
         if self._meta is None:
             raise Exception("Meta class must be defined for ObjectType")
         return self.dataclass_model(**kwargs)

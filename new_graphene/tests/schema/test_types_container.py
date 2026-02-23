@@ -3,6 +3,8 @@ import unittest
 from graphql import GraphQLInt
 from grapqltypes import GrapheneGraphqlObjectType
 
+from new_graphene.fields.arguments import Argument
+from new_graphene.fields.base import Field
 from new_graphene.fields.datatypes import Integer, String
 from new_graphene.fields.interface import Interface
 from new_graphene.fields.objecttypes import ObjectType
@@ -125,6 +127,15 @@ class TestTypesContainer(unittest.TestCase):
         self.assertIn('Name', result)
         self.assertIn('Age', result)
 
+        print(result)
+
+    def test_translate_fields_with_args(self):
+        instance = TypesContainer()
+
+        class SimpleType(ObjectType):
+            firstname = Field(String, args={'search': Argument(String)})
+
+        result = instance._translate_fields(SimpleType)
         print(result)
 
     def test_translate_fields_with_subscription_resolver(self):

@@ -1,45 +1,22 @@
-from enum import Enum as PyEnum
 import inspect
+from enum import Enum as PyEnum
 from functools import partial
 
-from graphql import (
-    default_type_resolver,
-    get_introspection_query,
-    graphql,
-    graphql_sync,
-    introspection_types,
-    parse,
-    print_schema,
-    subscribe,
-    validate,
-    ExecutionResult,
-    GraphQLArgument,
-    GraphQLBoolean,
-    GraphQLError,
-    GraphQLEnumValue,
-    GraphQLField,
-    GraphQLFloat,
-    GraphQLID,
-    GraphQLInputField,
-    GraphQLInt,
-    GraphQLList,
-    GraphQLNonNull,
-    GraphQLObjectType,
-    GraphQLSchema,
-    GraphQLString,
-)
+from graphql import (ExecutionResult, GraphQLArgument, GraphQLBoolean,
+                     GraphQLEnumValue, GraphQLError, GraphQLField,
+                     GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
+                     GraphQLList, GraphQLNonNull, GraphQLObjectType,
+                     GraphQLSchema, GraphQLString, default_type_resolver,
+                     get_introspection_query, graphql, graphql_sync,
+                     introspection_types, parse, print_schema, subscribe,
+                     validate)
 
-from ..utils.str_converters import to_camel_case
 from ..utils.get_unbound_function import get_unbound_function
-from .definitions import (
-    GrapheneEnumType,
-    GrapheneGraphQLType,
-    GrapheneInputObjectType,
-    GrapheneInterfaceType,
-    GrapheneObjectType,
-    GrapheneScalarType,
-    GrapheneUnionType,
-)
+from ..utils.str_converters import to_camel_case
+from .definitions import (GrapheneEnumType, GrapheneGraphQLType,
+                          GrapheneInputObjectType, GrapheneInterfaceType,
+                          GrapheneObjectType, GrapheneScalarType,
+                          GrapheneUnionType)
 from .dynamic import Dynamic
 from .enum import Enum
 from .field import Field
@@ -59,7 +36,8 @@ IntrospectionSchema = introspection_types["__Schema"]
 def assert_valid_root_type(type_):
     if type_ is None:
         return
-    is_graphene_objecttype = inspect.isclass(type_) and issubclass(type_, ObjectType)
+    is_graphene_objecttype = inspect.isclass(
+        type_) and issubclass(type_, ObjectType)
     is_graphql_objecttype = isinstance(type_, GraphQLObjectType)
     assert (
         is_graphene_objecttype or is_graphql_objecttype
@@ -107,9 +85,11 @@ class TypeMap(dict):
 
         self.query = create_graphql_type(query) if query else None
         self.mutation = create_graphql_type(mutation) if mutation else None
-        self.subscription = create_graphql_type(subscription) if subscription else None
+        self.subscription = create_graphql_type(
+            subscription) if subscription else None
 
-        self.types = [create_graphql_type(graphene_type) for graphene_type in types]
+        self.types = [create_graphql_type(graphene_type)
+                      for graphene_type in types]
 
     def add_type(self, graphene_type):
         if inspect.isfunction(graphene_type):
@@ -121,7 +101,8 @@ class TypeMap(dict):
         try:
             name = graphene_type._meta.name
         except AttributeError:
-            raise TypeError(f"Expected Graphene type, but received: {graphene_type}.")
+            raise TypeError(
+                f"Expected Graphene type, but received: {graphene_type}.")
         graphql_type = self.get(name)
         if graphql_type:
             return graphql_type
@@ -138,7 +119,8 @@ class TypeMap(dict):
         elif issubclass(graphene_type, Union):
             graphql_type = self.construct_union(graphene_type)
         else:
-            raise TypeError(f"Expected Graphene type, but received: {graphene_type}.")
+            raise TypeError(
+                f"Expected Graphene type, but received: {graphene_type}.")
         self[name] = graphql_type
         return graphql_type
 
@@ -183,7 +165,8 @@ class TypeMap(dict):
             if not deprecation_reason and callable(
                 graphene_type._meta.deprecation_reason
             ):
-                deprecation_reason = graphene_type._meta.deprecation_reason(value)
+                deprecation_reason = graphene_type._meta.deprecation_reason(
+                    value)
 
             values[name] = GraphQLEnumValue(
                 value=value,
@@ -309,8 +292,8 @@ class TypeMap(dict):
                 field = get_field_as(field.get_type(self), _as=Field)
                 if not field:
                     continue
-                
-            field_type = create_graphql_type(field.type)    
+
+            field_type = create_graphql_type(field.type)
             if is_input_type:
                 _field = GraphQLInputField(
                     field_type,
@@ -438,6 +421,7 @@ class Schema:
         type_map = TypeMap(
             query, mutation, subscription, types, auto_camelcase=auto_camelcase
         )
+        self.type_map = type_map
         self.graphql_schema = GraphQLSchema(
             type_map.query,
             type_map.mutation,

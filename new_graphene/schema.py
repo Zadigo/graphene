@@ -149,14 +149,15 @@ class TypesContainer(dict):
                     deprecation_reason=field_obj.deprecation_reason
                 )
             else:
-                # Build the GraphQl args
+                # Build the field arguments
+                # e.g. name(search: String)
                 built_args = {}
-                for name, arg in field_obj.args.items():
+                for name, arg in field_obj._arguments.items():
                     created_type = self.add_to_self(arg.field_type)
                     arg_name = arg.name or self.get_name(name)
                     built_args[arg_name] = GraphQLArgument(
                         created_type,
-                        description=arg.description,
+                        # description=arg.description,
                         default_value=arg.default_value,
                         deprecation_reason=arg.deprecation_reason,
                     )

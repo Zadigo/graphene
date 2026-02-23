@@ -1,9 +1,10 @@
 import itertools
+from collections import OrderedDict
 from typing import Any, MutableMapping, Optional
 
 from new_graphene.fields.dynamic import Dynamic
 from new_graphene.fields.helpers import ExplicitField, ImplicitField
-from new_graphene.typings import TypeScalar
+from new_graphene.typings import TypeField, TypeScalar
 
 
 class Argument(ExplicitField):
@@ -46,7 +47,7 @@ class Argument(ExplicitField):
         counter (int, optional): The creation counter for the argument. If not provided, it will be automatically assigned.
     """
 
-    def __init__(self, field_type: TypeScalar, default_value: Optional[Any] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, required: bool = False, counter: Optional[int] = None):
+    def __init__(self, field_type: type[TypeScalar], default_value: Optional[Any] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, required: bool = False, counter: Optional[int] = None):
         super().__init__(field_type, counter=counter)
 
         self.field_type = field_type
@@ -69,17 +70,18 @@ class Argument(ExplicitField):
         ])
 
     @classmethod
-    def translate_arguments(cls, args: MutableMapping[str, Any], extra_args: Optional[MutableMapping[str, Any]] = None) -> MutableMapping[str, 'Argument']:
+    def translate_arguments(cls, field_obj: TypeField) -> MutableMapping[str, 'Argument']:
         from new_graphene.fields.base import Field
         from new_graphene.fields.input import InputField
 
-        sorted_extra_args = []
-        if extra_args is not None:
-            sorted_extra_args = sorted(extra_args.items(), key=lambda f: f[1])
+        all_args = list(
+            itertools.chain(
+                field_obj.args.items(),
+                field_obj.extra_args.items()
+            )
+        )
 
-        all_args = itertools.chain(args.items(), sorted_extra_args)
-
-        final_arguments = {}
+        final_arguments = OrderedDict()
 
         for key, value in all_args:
             if isinstance(value, Dynamic):
@@ -90,7 +92,7 @@ class Argument(ExplicitField):
             instance: Optional[Argument] = None
 
             if isinstance(value, ImplicitField):
-                instance = cls.mount(value)
+                instance = cls.create_new_field(value)
 
             if isinstance(value, (Field, InputField)):
                 raise ValueError(
@@ -110,6 +112,7 @@ class Argument(ExplicitField):
                         f'More than one Argument have same name "{default_name}".')
 
                 final_arguments[default_name] = instance
+
         return final_arguments
 
     # def _get_type(self):

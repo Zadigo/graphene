@@ -53,13 +53,14 @@ class TestExplicitField(unittest.TestCase):
         print(instance)
 
     def test_mount(self):
-        field = ExplicitField.mount(String(description="A string field"))
+        field = ExplicitField.create_new_field(
+            String(description="A string field"))
         self.assertIsInstance(field, ExplicitField)
         print(field)
 
     def test_mount_wrong_value(self):
         with self.assertRaises(TypeError):
-            ExplicitField.mount(123)
+            ExplicitField.create_new_field(123)
 
 
 class TestImplicitField(unittest.TestCase):

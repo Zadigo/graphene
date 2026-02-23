@@ -50,5 +50,4 @@ Changelog = "https://github.com/Zadigo/graphene/blob/main/CHANGELOG.md"
 typeCheckingMode = "off"
 extraPaths = ["./new_graphene"]
 reportMissingImports = true
-enableReachabilityAnalysis = true
 reportUntypedBaseClass = true

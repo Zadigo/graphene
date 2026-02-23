@@ -1,15 +1,15 @@
 from typing import (TYPE_CHECKING, Any, Callable, ClassVar, Mapping,
-                    MutableMapping, Optional, Protocol, Sequence,
-                    runtime_checkable)
+                    MutableMapping, Protocol, Sequence, runtime_checkable)
 
 from graphql import (ExecutionContext, GraphQLFieldResolver,
                      GraphQLInterfaceType, GraphQLObjectType,
                      GraphQLResolveInfo, GraphQLScalarType,
-                     GraphQLTypeResolver, Middleware, Source, ValueNode)
+                     GraphQLTypeResolver, Middleware, Source)
 
 if TYPE_CHECKING:
     from new_graphene.base import BaseOptions, BaseType
     from new_graphene.fields.arguments import Argument
+    from new_graphene.fields.base import Field
     from new_graphene.fields.datatypes import Scalar
     from new_graphene.fields.helpers import ExplicitField, ImplicitField
     from new_graphene.fields.interface import Interface
@@ -20,7 +20,9 @@ type TypeAllTypes = str | int | float | bool | Sequence | MutableMapping | None
 
 type TypeScalar[T= TypeAllTypes] = Scalar[T]
 
-type TypeField = ExplicitField | ImplicitField
+type TypeFieldType = ExplicitField | ImplicitField
+
+type TypeField = Field
 
 type TypeBaseType = BaseType
 
@@ -49,7 +51,7 @@ type TypeGraphqlExecuteKwargs[T = TypeGraphqlExecuteOptions] = MutableMapping[st
 
 type TypeGraphqlExecuteArgs[T= TypeGraphqlExecuteOptions] = Sequence[T]
 
-type TypeImports = TypeScalar | TypeArgument | TypeInterface | TypeObjectType | TypeField | TypeSchema | Callable[
+type TypeImports = TypeScalar | TypeArgument | TypeInterface | TypeObjectType | TypeFieldType | TypeSchema | Callable[
     ..., Any] | Any
 
 type TypeGraphQlTypes = GraphQLInterfaceType | GraphQLObjectType | GraphQLObjectType | GraphQLScalarType
@@ -59,6 +61,9 @@ type TypeGraphQlTypes = GraphQLInterfaceType | GraphQLObjectType | GraphQLObject
 class TypeDataclass(Protocol):
     __dataclass_fields__: ClassVar[dict]
 
+    def __getattr__(self, name: str) -> TypeAllTypes: ...
+
+    def as_dict(self) -> dict[str, TypeAllTypes]: ...
 
 # class ScalarProtocol(Protocol):
 #     is_scalar: ClassVar[bool]

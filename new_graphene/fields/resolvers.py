@@ -39,4 +39,4 @@ def default_resolver() -> Callable[..., TypeResolver]:
 
 
 def source_resolver(source: str, root: MutableMapping[str, Any], info: GraphQLResolveInfo, **arguments: Any):
-    pass
+    return root

@@ -4,7 +4,7 @@ from functools import total_ordering
 from typing import Any, Callable, Optional, Type
 from warnings import deprecated
 
-from new_graphene.typings import (TypeArgument, TypeField, TypeObjectType,
+from new_graphene.typings import (TypeArgument, TypeFieldType, TypeObjectType,
                                   TypeScalar)
 from new_graphene.utils.base import ObjectTypesEnum
 from new_graphene.utils.module_loading import import_string
@@ -13,7 +13,7 @@ from new_graphene.utils.printing import PrintingMixin
 
 # get_type
 @deprecated('We will be importing the items directly in _get_type instead of using this helper function.')
-def inspect_type(item: TypeField | TypeScalar | Callable[..., Any] | Any):
+def inspect_type(item: TypeFieldType | TypeScalar | Callable[..., Any] | Any):
     """Inspect the type of an item and return it. This function is 
     used to resolve the type of an item that can be defined by
     a Python path string, a callable, or a direct instance."""
@@ -56,6 +56,7 @@ class BaseField(PrintingMixin):
         self.creation_counter = counter or self.increase_counter()
         self.args = args
         self.kwargs = kwargs
+        self._arguments: dict[str, TypeArgument] = {}
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, BaseField):
@@ -117,36 +118,39 @@ class ExplicitField(BaseField):  # MountedType
 
     is_mounted: bool = True
 
-    def __init__(self, field_type: TypeScalar | TypeObjectType, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, field_type: TypeScalar | TypeObjectType, *args, counter: Optional[int] = None, **kwargs):
+        super().__init__(*args, counter=counter, **kwargs)
         self.field_type = field_type
 
     def __repr__(self) -> str:
         return self.print_field(self)
 
     @classmethod
-    def mount(cls, item: ImplicitField):
-        """Creates a new instance of the ExplicitField class by mounting an ImplicitField. 
-        This method is used to convert an ImplicitField into an ExplicitField when necessary, 
+    def create_new_field(cls, item: ImplicitField):
+        """Creates a new instance of an `ExplicitField` class with an `ImplicitField`. 
+        This method is used to convert an `ImplicitField` into an `ExplicitField` when necessary, 
         allowing for more control over the field's behavior and configuration.
 
         >>> from new_graphene import String
         ... field = String(description='The name of the car')
-        ... explicit_field = ExplicitField.mount(field)
+        ... explicit_field = ExplicitField.create_new_field(field)
         >>> isinstance(explicit_field, ExplicitField)
+        True
         """
         if not isinstance(item, ImplicitField):
             raise TypeError(
                 "Expected an ImplicitField, "
                 f"got {type(item).__name__}"
             )
-
-        kwargs = item.kwargs | {'counter': item.creation_counter}
-        return cls(
+        
+        instance = cls(
             item._get_type(),
             *item.args,
-            **kwargs
+            counter=item.creation_counter,
+            **item.kwargs
         )
+
+        return instance
 
     def _get_type(self):
         return self.field_type
@@ -188,7 +192,7 @@ class ImplicitField(BaseField):  # UnmountedType
         counter (int, optional): The creation counter for the field. If not provided, it will be automatically assigned.
     """
 
-    def __eq__(self, other: TypeField | Any) -> bool:
+    def __eq__(self, other: TypeFieldType | Any) -> bool:
         truth_array = [
             isinstance(other, ImplicitField),
             all([
@@ -213,7 +217,7 @@ class ImplicitField(BaseField):  # UnmountedType
 
 
 @deprecated("This function will be renamed to 'mount_type_as'.")
-def get_field_as(value: TypeField, mount_type: Optional[ExplicitField] = None):
+def get_field_as(value: TypeFieldType, mount_type: Optional[ExplicitField] = None):
     """Mount an `ImplicitField` as an `ExplicitField` (e.g. `Field`).
 
     .. code-block:: python
@@ -227,5 +231,5 @@ def get_field_as(value: TypeField, mount_type: Optional[ExplicitField] = None):
     elif isinstance(value, ImplicitField):
         if mount_type is None:
             return value
-        return mount_type.mount(value)
+        return mount_type.create_new_field(value)
     return None

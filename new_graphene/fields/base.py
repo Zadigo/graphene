@@ -35,7 +35,7 @@ class Field(ExplicitField):
         **extra_args (Any, optional): Any additional arguments to mount on the field. This can be used to specify additional configuration options for the field, such as custom directives or extensions. These extra arguments will be passed through to the underlying GraphQL library when the schema is generated, allowing for advanced users to take advantage of features that may not be directly supported by the Field class itself.
     """
 
-    def __init__(self, field_type: TypeScalar | TypeObjectType, args: Optional[TypeMapping[TypeArgument]] = None, resolver: Optional[TypeResolver] = None, source: Optional[str] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None, default_value: Optional[TypeScalar] = None, **extra_args: Any):
+    def __init__(self, field_type: type[TypeScalar | TypeObjectType], args: Optional[TypeMapping[TypeArgument]] = None, resolver: Optional[TypeResolver] = None, source: Optional[str] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None, default_value: Optional[TypeScalar] = None, **extra_args: Any):
         super().__init__(field_type, counter=creation_counter)
 
         if args is not None and not isinstance(args, MutableMapping):
@@ -63,19 +63,15 @@ class Field(ExplicitField):
             pass
 
         self.field_type = field_type
-        self.args = args or {}
-        self.extra_args = extra_args
+        self.args = args or {} # TODO: Remove
+        self.extra_args = extra_args # TODO: Remove
+        self._arguments = Argument.translate_arguments(self)
         self.resolver = resolver
         self.deprecation_reason = deprecation_reason
         self.name = name
         self.description = description
         self.required = required
         self.default_value = default_value
-
-        self._arguments = Argument.translate_arguments(
-            self.args,
-            self.extra_args
-        )
 
         if source is not None:
             self.resolver = functools.partial(source_resolver, source)

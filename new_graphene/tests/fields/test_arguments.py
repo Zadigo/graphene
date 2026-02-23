@@ -44,3 +44,12 @@ class TestArgument(unittest.TestCase):
         )
         print(result)
         # self.assertEqual(result, {'name': String})
+
+    def test_with_invalid_arg_type(self):
+        result = Argument.translate_arguments(
+            {'search': String(), 'height': 1}, {'extra': 2})
+        self.assertIn('search', result)
+
+        instance = result['search']
+        self.assertIsInstance(instance, Argument)
+        self.assertEqual(instance.field_type, String)

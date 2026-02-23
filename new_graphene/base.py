@@ -5,8 +5,8 @@ from typing import Any, List, Mapping, MutableMapping, Optional, Sequence
 from new_graphene.exceptions import InvalidMetaOptionsError
 from new_graphene.fields.base import Field
 from new_graphene.fields.helpers import get_field_as
-from new_graphene.typings import (TypeDataclass, TypeExplicitField, TypeField,
-                                  TypeInterface, TypeResolver)
+from new_graphene.typings import (TypeDataclass, TypeExplicitField,
+                                  TypeFieldType, TypeInterface, TypeResolver)
 from new_graphene.utils.base import ObjectTypesEnum
 from new_graphene.utils.printing import PrintingMixin
 
@@ -48,7 +48,7 @@ class BaseOptions(PrintingMixin):
         if key in self.accepted_keys:
             setattr(self, key, value)
 
-    def filter_fields(self, namespace: Mapping[str, Any] | Sequence[tuple[str, Any]], sort: bool = False) -> MutableMapping[str, TypeField]:
+    def filter_fields(self, namespace: Mapping[str, Any] | Sequence[tuple[str, Any]], sort: bool = False) -> MutableMapping[str, TypeFieldType]:
         """Filters the fields from the provided namespace"""
         if isinstance(namespace, (MutableMapping, Mapping)):
             namespace = list(namespace.items())
