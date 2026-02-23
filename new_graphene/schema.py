@@ -1,6 +1,6 @@
 import functools
 import inspect
-from typing import Any, Optional, Sequence
+from typing import Any, Optional, Sequence, Type
 
 from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
                      GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
@@ -37,19 +37,19 @@ class TypesContainer(dict):
     container and retrieving them as needed.
 
     Args:
-        query (TypeObjectType, optional): The root query type for the schema. Defaults to None.
-        mutation (TypeObjectType, optional): The root mutation type for the schema. Defaults to None.
-        subscription (TypeObjectType, optional): The root subscription type for the schema. Defaults to None.
-        types (Sequence[TypeObjectType], optional): A list of additional types used in the schema. Defaults to None.
+        query (Type[TypeObjectType], optional): The root query type for the schema. Defaults to None.
+        mutation (Type[TypeObjectType], optional): The root mutation type for the schema. Defaults to None.
+        subscription (Type[TypeObjectType], optional): The root subscription type for the schema. Defaults to None.
+        types (Sequence[Type[TypeObjectType]], optional): A list of additional types used in the schema. Defaults to None.
         auto_camelcase (bool, optional): Whether to automatically convert field names to camel case. Defaults to True.
     """
 
-    def __init__(self, query: Optional[TypeObjectType] = None, mutation: Optional[TypeObjectType] = None, subscription: Optional[TypeObjectType] = None, types: Optional[Sequence[TypeObjectType]] = None, auto_camelcase: bool = True):
+    def __init__(self, query: Optional[Type[TypeObjectType]] = None, mutation: Optional[Type[TypeObjectType]] = None, subscription: Optional[Type[TypeObjectType]] = None, types: Optional[Sequence[Type[TypeObjectType]]] = None, auto_camelcase: bool = True):
         self.auto_camelcase = auto_camelcase
 
-        _query = self._check_type(query)
-        _mutation = self._check_type(mutation)
-        _subscription = self._check_type(subscription)
+        _query = self._check_is_type_class(query)
+        _mutation = self._check_is_type_class(mutation)
+        _subscription = self._check_is_type_class(subscription)
 
         self.query = self.add_to_self(_query)
         self.mutation = self.add_to_self(_mutation)
@@ -66,7 +66,7 @@ class TypesContainer(dict):
     def _check_types(self, value: Any):
         pass
 
-    def _check_type(self, value: Any) -> Optional[TypeObjectType]:
+    def _check_is_type_class(self, value: Any) -> Optional[Type[TypeObjectType]]:
         if value is None:
             return value
 
@@ -345,15 +345,15 @@ class Schema(PrintingMixin):
         schema = Schema(query=Query)
 
     Args:
-        query (TypeObjectType, optional): The root query type for the schema. Defaults to None.
-        mutation (TypeObjectType, optional): The root mutation type for the schema. Defaults to None.
-        subscription (TypeObjectType, optional): The root subscription type for the schema. Defaults to None.
-        types (Sequence[TypeObjectType], optional): A list of additional types used in the schema. Defaults to None.
+        query (Type[TypeObjectType], optional): The root query type for the schema. Defaults to None.
+        mutation (Type[TypeObjectType], optional): The root mutation type for the schema. Defaults to None.
+        subscription (Type[TypeObjectType], optional): The root subscription type for the schema. Defaults to None.
+        types (Sequence[Type[TypeObjectType]], optional): A list of additional types used in the schema. Defaults to None.
         directives (Sequence, optional): A list of directives used in the schema. Defaults to None. 
         auto_camelcase (bool, optional): Whether to automatically convert field names to camel case. Defaults to True.
     """
 
-    def __init__(self, query: Optional[TypeObjectType] = None, mutation: Optional[TypeObjectType] = None, subscription: Optional[TypeObjectType] = None, types: Optional[Sequence[TypeObjectType]] = None, directives: Optional[Sequence] = None, auto_camelcase: bool = True):
+    def __init__(self, query: Optional[Type[TypeObjectType]] = None, mutation: Optional[Type[TypeObjectType]] = None, subscription: Optional[Type[TypeObjectType]] = None, types: Optional[Sequence[Type[TypeObjectType]]] = None, directives: Optional[Sequence] = None, auto_camelcase: bool = True):
         self.query = query
         self.mutation = mutation
         self.subscription = subscription

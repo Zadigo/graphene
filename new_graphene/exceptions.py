@@ -9,7 +9,7 @@ class InvalidMetaOptionsError(Exception):
 
 
 class GrapheneObjectTypeError(Exception):
-    message = "Expected a Graphene ObjectType or a subclass of ObjectType, got {value_type} without a name"
+    message = "Expected a Type that is a subclass of ObjectType. Got {value_type}"
 
     def __init__(self, value: Any):
         super().__init__(self.message.format(value_type=type(value).__name__))

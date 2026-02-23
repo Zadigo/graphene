@@ -1,10 +1,10 @@
 from faker import Faker
 from graphql import GraphQLResolveInfo
 
+from new_graphene.fields.base import Field
 from new_graphene.fields.datatypes import Integer, String
 from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.schema import Schema
-from new_graphene.fields.base import Field
 
 faker = Faker()
 
@@ -19,7 +19,6 @@ class Query(ObjectType):
     users = Field(User, search=String())
 
     def resolve_users(root, info: GraphQLResolveInfo, search: str = None):
-        print(search)
         return {
             'firstname': faker.first_name(),
             'lastname': faker.last_name(),
