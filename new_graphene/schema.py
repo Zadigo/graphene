@@ -139,7 +139,7 @@ class TypesContainer(dict):
                 pass
 
             input_or_output_type = self.add_to_self(field_obj.field_type)
-
+            
             if is_input_field:
                 _final_field = GraphQLInputField(
                     input_or_output_type,
@@ -151,14 +151,16 @@ class TypesContainer(dict):
                 # Build the field arguments
                 # e.g. name(search: String)
                 built_args = {}
-                for name, arg in field_obj._arguments.items():
-                    created_type = self.add_to_self(arg.field_type)
-                    arg_name = arg.name or self.get_name(name)
+                for arg_name, arg_obj in field_obj._arguments.items():
+                    created_type = self.add_to_self(arg_obj.field_type)
+                    arg_name = arg_obj.name or self.get_name(arg_name)
+
                     built_args[arg_name] = GraphQLArgument(
                         created_type,
-                        # description=arg.description,
-                        default_value=arg.default_value,
-                        deprecation_reason=arg.deprecation_reason,
+                        out_name=arg_name,
+                        # description=arg_instance._meta.description,
+                        default_value=arg_obj.default_value,
+                        deprecation_reason=arg_obj.deprecation_reason,
                     )
 
                 # 1. Obtain the resolver for subscription

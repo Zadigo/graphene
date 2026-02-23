@@ -135,15 +135,14 @@ class TestTypesContainer(unittest.TestCase):
             name = String()
             age = Integer()
 
-        class SimpleType(ObjectType):
+        class Query(ObjectType):
             users = Field(User, search=String())
 
-        result = instance._create_fields(SimpleType)
-
+        result = instance._create_fields(Query)
         self.assertIsNotNone(result)
+        self.assertIn('name', User._meta.fields)
+        self.assertIn('users', Query._meta.fields)
         self.assertIn('users', result)
-
-        print(result)
 
     def test_translate_fields_with_args(self):
         instance = TypesContainer()

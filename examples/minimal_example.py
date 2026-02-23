@@ -8,6 +8,7 @@ faker = Faker()
 
 class User(ObjectType):
     name = String()
+    age = String()
 
 
 class Query(ObjectType):
