@@ -7,7 +7,6 @@ from graphql import (BooleanValueNode, FloatValueNode, IntValueNode,
                      StringValueNode, Undefined, ValueNode)
 from graphql.error import GraphQLError
 
-from new_graphene.base import BaseType
 from new_graphene.fields.helpers import ImplicitField
 from new_graphene.utils.base import ObjectTypesEnum
 
@@ -16,7 +15,7 @@ MAX_INT = 2147483647
 MIN_INT = -2147483648
 
 
-class Scalar[T = Any](ImplicitField, BaseType):
+class Scalar[T= Any](ImplicitField):
     """A scalar type represents a primitive value in GraphQL. It is used to define fields 
     that return simple values such as strings, numbers, or booleans. Each specific scalar 
     type (e.g., Integer, String, Boolean) will implement the parsing and resolution logic 

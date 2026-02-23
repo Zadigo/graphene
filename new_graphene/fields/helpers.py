@@ -31,6 +31,29 @@ MAX_INT = 2147483647
 MIN_INT = -2147483648
 
 
+class BaseFieldOptions:
+    def __init__(self, name: str, cls: TypeFieldType):
+        self.cls = cls
+        self.name: str = None
+        self._internal_name: str = None
+        self._class_name: str = name
+
+        if self.name is None:
+            self.name = self._class_name
+            self._internal_name = self._class_name
+
+    def __repr__(self):
+        return f"<{self.name or self._class_name}Options [{self.cls}]>"
+
+
+class BaseFieldType(type):
+    def __new__(cls, name: str, bases: tuple[Type], attrs: dict):
+        super_new = super().__new__
+        options = BaseFieldOptions(name, cls)
+        attrs['_meta'] = options
+        return super_new(cls, name, bases, attrs)
+
+
 @total_ordering
 class BaseField(PrintingMixin):
     """BaseField is the base class for all field types in the Graphene library. It is a container
@@ -51,12 +74,14 @@ class BaseField(PrintingMixin):
     is_mounted: bool = False
     is_scalar: bool = False  # TODO: Remove
     internal_type: Optional[ObjectTypesEnum] = ObjectTypesEnum.FIELD
+    _meta: Optional[BaseFieldOptions]
 
     def __init__(self, *args: TypeArgument, counter: Optional[int] = None, **kwargs: TypeArgument):
         self.creation_counter = counter or self.increase_counter()
         self.args = args
         self.kwargs = kwargs
         self._arguments: dict[str, TypeArgument] = {}
+        # self._meta = BaseFieldOptions(self)
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, BaseField):
@@ -91,7 +116,7 @@ class BaseField(PrintingMixin):
         self.creation_counter = self.increase_counter()
 
 
-class ExplicitField(BaseField):  # MountedType
+class ExplicitField(BaseField, metaclass=BaseFieldType):  # MountedType
     """An explicit field is a field that is mounted on an object type using 
     the `Field` class. This is the standard way to define fields on an object 
     type, and allows for more control over the field's behavior and configuration.
@@ -142,7 +167,7 @@ class ExplicitField(BaseField):  # MountedType
                 "Expected an ImplicitField, "
                 f"got {type(item).__name__}"
             )
-        
+
         instance = cls(
             item._get_type(),
             *item.args,
@@ -156,7 +181,7 @@ class ExplicitField(BaseField):  # MountedType
         return self.field_type
 
 
-class ImplicitField(BaseField):  # UnmountedType
+class ImplicitField(BaseField, metaclass=BaseFieldType):  # UnmountedType
     """An implicit field is a field that inherits from Graphene Type and
     allows the class to be dynamically instanciated/mounted on an object type.
 
@@ -191,6 +216,9 @@ class ImplicitField(BaseField):  # UnmountedType
     Args:
         counter (int, optional): The creation counter for the field. If not provided, it will be automatically assigned.
     """
+
+    def __repr__(self):
+        return self.print_field(self)
 
     def __eq__(self, other: TypeFieldType | Any) -> bool:
         truth_array = [
