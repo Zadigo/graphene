@@ -78,7 +78,7 @@ class BaseOptions(PrintingMixin):
         user_defined_fields = self.filter_fields(namespace)
 
         for key, field_obj in user_defined_fields.items():
-            field = mount_type_as(field_obj, Field)
+            field = mount_type_as(field_obj, mount_type=Field)
             if field is not None:
                 self.fields[key] = field
                 field_obj.creation_counter += 1
@@ -92,7 +92,7 @@ class BaseOptions(PrintingMixin):
         """Adds an interface to the ObjectType"""
         fields = self.filter_fields(interface.__dict__)
         for key, field_obj in fields.items():
-            self.add_field(key, mount_type_as(field_obj, Field))
+            self.add_field(key, mount_type_as(field_obj, mount_type=Field))
 
 
 class BaseObjectType(type):

@@ -13,7 +13,7 @@ class PrintingMixin:
 
     @staticmethod
     def print_field(item: TypeField) -> str:
-        return f"<{item.name or item.__class__.__name__} :: [{item.field_type}]>"
+        return f"<{item._meta.name or item.__class__.__name__} :: [{item.field_type.__name__}]>"
 
     @staticmethod
     def print_argument(item: TypeArgument) -> str:

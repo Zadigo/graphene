@@ -1,16 +1,16 @@
 from typing import Any
 
 from new_graphene.fields.helpers import ImplicitField
-from new_graphene.typings import TypeObjectType, TypeScalar
+from new_graphene.typings import TypeArgument, TypeObjectType, TypeScalar
 
 
-class Structure(ImplicitField):
+class Structure[T = TypeScalar | TypeObjectType](ImplicitField):
     """Wrap a type within a structure. This is used for `List` and `NonNull` types, 
     which are wrappers around other types to indicate that they are lists 
     or non-nullable
     """
 
-    def __init__(self, field_type: type[TypeScalar | TypeObjectType], *args, **kwargs):
+    def __init__(self, field_type: T, *args: TypeArgument, **kwargs: TypeArgument):
         super().__init__(field_type, *args, **kwargs)
 
         if not isinstance(field_type, Structure) and isinstance(field_type, ImplicitField):
@@ -23,6 +23,9 @@ class Structure(ImplicitField):
 
     def __eq__(self, other: Any):
         return super().__eq__(other)
+    
+    def _get_type(self):
+        return self.field_type
 
 
 class List(Structure):

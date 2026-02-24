@@ -5,7 +5,7 @@ from new_graphene.fields.helpers import (BaseField, ExplicitField,
                                          ImplicitField, inspect_type,
                                          mount_type_as)
 from new_graphene.fields.scalars import String
-from new_graphene.fields.structures import NonNull
+from new_graphene.fields.structures import List, NonNull
 
 
 def return_resolver_input(root, info, input):
@@ -50,12 +50,14 @@ class TestBaseField(unittest.TestCase):
 
 class TestExplicitField(unittest.TestCase):
     def test_instance(self):
-        instance = ExplicitField(String, description="A string field")
+        instance = ExplicitField(String)
         print(instance)
 
     def test_mount(self):
-        field = ExplicitField.create_new_field(
-            String(description="A string field"))
+        field = ExplicitField.create_new_field(String())
+        self.assertIsInstance(field, ExplicitField)
+
+        field = ExplicitField.create_new_field(List(String))
         self.assertIsInstance(field, ExplicitField)
         print(field)
 

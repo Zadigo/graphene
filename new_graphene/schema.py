@@ -505,9 +505,3 @@ class Schema(PrintingMixin):
 
     def asubscribe(self, query, *args, **kwargs):
         pass
-
-    def asubscribe(self, query, *args, **kwargs):
-        pass
-
-    def asubscribe(self, query, *args, **kwargs):
-        pass

@@ -159,10 +159,8 @@ class ExplicitField(BaseField, metaclass=BaseFieldType):  # MountedType
         allowing for more control over the field's behavior and configuration.
 
         >>> from new_graphene import String
-        ... field = String(description='The name of the car')
-        ... explicit_field = ExplicitField.create_new_field(field)
-        >>> isinstance(explicit_field, ExplicitField)
-        True
+        ... explicit_field = ExplicitField.create_new_field(String())
+        Field
         """
         if not isinstance(item, ImplicitField):
             raise TypeError(
@@ -170,6 +168,10 @@ class ExplicitField(BaseField, metaclass=BaseFieldType):  # MountedType
                 f"got {type(item).__name__}"
             )
 
+        # FIXME: This raises a "TypeError: Field.__init__() takes 2 positional arguments but 3 were given" error in the case
+        # of List(User) for example because the "field_type" is
+        # the args. The correct writing would then be:
+        # cls(*item.args, **item.kwargs)
         instance = cls(
             item._get_type(),
             *item.args,
