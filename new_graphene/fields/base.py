@@ -1,14 +1,16 @@
 import functools
-from typing import Any, Callable, MutableMapping, Optional
+from typing import Callable, MutableMapping, Optional
 
 from new_graphene.fields.arguments import Argument
 from new_graphene.fields.helpers import ExplicitField, inspect_type
 from new_graphene.fields.resolvers import source_resolver
-from new_graphene.typings import (TypeArgument, TypeMapping, TypeObjectType,
-                                  TypeResolver, TypeScalar)
+from new_graphene.fields.structures import NonNull
+from new_graphene.typings import (TypeArgument, TypeDynamic, TypeMapping,
+                                  TypeObjectType, TypeResolver, TypeScalar,
+                                  TypeStructure)
 
 
-class Field(ExplicitField):
+class Field[F = type[TypeScalar | TypeObjectType]](ExplicitField):
     """The `Field` class is used explicitly to define a field on an ObjectType 
     in the Graphene library. It allows for more control over the field's behavior 
     and configuration compared to implicit fields. The `Field` class can be used to 
@@ -32,11 +34,11 @@ class Field(ExplicitField):
         name (str, optional): The name of the GraphQL field (must be unique in a type). Defaults to attribute name.
         description (str, optional): The description of the GraphQL field in the schema.
         default_value (TypeScalar, optional): Default value to resolve if none set from schema. Cannot be a callable, use a lambda or partial if you need lazy evaluation.
-        **extra_args (Any, optional): Any additional arguments to mount on the field. This can be used to specify additional configuration options for the field, such as custom directives or extensions. These extra arguments will be passed through to the underlying GraphQL library when the schema is generated, allowing for advanced users to take advantage of features that may not be directly supported by the Field class itself.
+        **extra_args (TypeScalar, optional): Any additional arguments to mount on the field. This can be used to specify additional configuration options for the field, such as custom directives or extensions. These extra arguments will be passed through to the underlying GraphQL library when the schema is generated, allowing for advanced users to take advantage of features that may not be directly supported by the Field class itself.
     """
 
-    def __init__(self, field_type: type[TypeScalar | TypeObjectType], args: Optional[TypeMapping[TypeArgument]] = None, resolver: Optional[TypeResolver] = None, source: Optional[str] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, creation_counter: Optional[int] = None, default_value: Optional[TypeScalar] = None, **extra_args: Any):
-        super().__init__(field_type, counter=creation_counter)
+    def __init__(self, field_type: F, *, args: Optional[TypeMapping[TypeArgument | TypeDynamic]] = None, resolver: Optional[TypeResolver] = None, source: Optional[str] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, description: Optional[str] = None, required: bool = False, default_value: Optional[TypeScalar] = None, **extra_args: TypeScalar):
+        super().__init__(field_type)
 
         if not isinstance(field_type, type):
             raise TypeError(
@@ -59,15 +61,12 @@ class Field(ExplicitField):
             )
 
         if required:
-            pass
+            field_type = NonNull(field_type)
 
         if isinstance(name, (Argument, ExplicitField)):
             pass
 
-        if isinstance(source, (Argument, ExplicitField)):
-            pass
-
-        self.field_type = field_type
+        self.field_type: F | TypeStructure = field_type
         self.args = args or {}  # TODO: Remove
         self.extra_args = extra_args  # TODO: Remove
         self._arguments = Argument.translate_arguments(self)
@@ -91,4 +90,6 @@ class Field(ExplicitField):
         return self.resolver or parent_resolver
 
     def wrap_subscribe(self, parent: Callable | None):
+        return parent
+        return parent
         return parent

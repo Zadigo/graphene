@@ -18,7 +18,6 @@ class TestScalar(unittest.TestCase):
     def test_instance(self):
         instance = Scalar()
         self.assertIsInstance(instance, Scalar)
-        self.assertEqual(instance.creation_counter, 2)
 
         print(instance)
 

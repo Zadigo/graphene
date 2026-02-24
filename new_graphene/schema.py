@@ -100,6 +100,23 @@ class TypesContainer(dict):
 
                 def resolve_name(self, info): # This is the resolver for 'name'
                     return "John Doe"
+
+        Or, on the interface:
+
+        .. code-block:: python
+            from new_graphene import ObjectType, String
+
+            class MyInterface(Interface):
+                name = String()
+
+                def resolve_name(self, info): # This is the resolver for 'name'
+                    return "John Doe"
+
+            class User(ObjectType):
+                name = String()
+
+                class Meta:
+                    interfaces = [MyInterface]
         """
         if not issubclass(graphene_type, ObjectType):
             return None

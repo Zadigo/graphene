@@ -80,7 +80,6 @@ class BaseField(PrintingMixin):
         self.args = args
         self.kwargs = kwargs
         self._arguments: dict[str, TypeArgument] = {}
-        # self._meta = BaseFieldOptions(self)
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, BaseField):
@@ -246,14 +245,13 @@ class ImplicitField(BaseField, metaclass=BaseFieldType):  # UnmountedType
         pass
 
 
-@deprecated("This function will be renamed to 'mount_type_as'.")
-def get_field_as(value: TypeFieldType, mount_type: Optional[ExplicitField] = None):
+def mount_type_as(value: TypeFieldType, mount_type: Optional[ExplicitField] = None):
     """Mount an `ImplicitField` as an `ExplicitField` (e.g. `Field`).
 
     .. code-block:: python
         from new_graphene import String
 
-        result = get_field_as(String, mount_type=Field)
+        result = mount_type_as(String, mount_type=Field)
         assert isinstance(result, Field)
     """
     if isinstance(value, ExplicitField):

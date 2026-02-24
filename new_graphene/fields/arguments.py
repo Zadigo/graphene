@@ -7,7 +7,7 @@ from new_graphene.fields.helpers import ExplicitField, ImplicitField
 from new_graphene.typings import TypeField, TypeScalar
 
 
-class Argument(ExplicitField):
+class Argument[F = type[TypeScalar]](ExplicitField):
     """An argument is a special type of field that is used to define the arguments of a field in a 
     GraphQL schema. Arguments are defined using the `Argument` class, and can be used to specify the type, 
     default value, and other configuration options for the argument.
@@ -45,11 +45,10 @@ class Argument(ExplicitField):
         deprecation_reason (str, optional): Setting this value indicates that the argument is deprecated and may provide instruction or reason on how for clients to proceed. Cannot be set if the argument is required (see spec).
         name (str, optional): The name of the argument. Defaults to parameter name.
         required (bool, optional): Indicates this argument as not null in the graphql schema. Same behavior as graphene.NonNull. Default False.
-        counter (int, optional): The creation counter for the argument. If not provided, it will be automatically assigned.
     """
 
-    def __init__(self, field_type: type[TypeScalar], default_value: Optional[Any] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, required: bool = False, counter: Optional[int] = None):
-        super().__init__(field_type, counter=counter)
+    def __init__(self, field_type: F, default_value: Optional[Any] = None, deprecation_reason: Optional[str] = None, name: Optional[str] = None, required: bool = False):
+        super().__init__(field_type)
 
         self.field_type = field_type
         self.default_value = default_value
@@ -94,14 +93,14 @@ class Argument(ExplicitField):
 
             instance: Optional[Argument] = None
 
-            if isinstance(value, ImplicitField):
-                instance = cls.create_new_field(value)
-
             if isinstance(value, (Field, InputField)):
                 raise ValueError(
                     f"Expected {key} to be Argument, but received {type(value).__name__}. Try using Argument({value.field_type})."
                 )
-            
+
+            if isinstance(value, ImplicitField):
+                instance = cls.create_new_field(value)
+
             if instance is None and isinstance(value, cls):
                 instance = value
 

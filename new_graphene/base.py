@@ -4,7 +4,7 @@ from typing import Any, List, Mapping, MutableMapping, Optional, Sequence
 
 from new_graphene.exceptions import InvalidMetaOptionsError
 from new_graphene.fields.base import Field
-from new_graphene.fields.helpers import get_field_as
+from new_graphene.fields.helpers import mount_type_as
 from new_graphene.typings import (TypeDataclass, TypeExplicitField,
                                   TypeFieldType, TypeInterface, TypeResolver)
 from new_graphene.utils.base import ObjectTypesEnum
@@ -78,7 +78,7 @@ class BaseOptions(PrintingMixin):
         user_defined_fields = self.filter_fields(namespace)
 
         for key, field_obj in user_defined_fields.items():
-            field = get_field_as(field_obj, Field)
+            field = mount_type_as(field_obj, Field)
             if field is not None:
                 self.fields[key] = field
                 field_obj.creation_counter += 1
@@ -92,7 +92,7 @@ class BaseOptions(PrintingMixin):
         """Adds an interface to the ObjectType"""
         fields = self.filter_fields(interface.__dict__)
         for key, field_obj in fields.items():
-            self.add_field(key, get_field_as(field_obj, Field))
+            self.add_field(key, mount_type_as(field_obj, Field))
 
 
 class BaseObjectType(type):
@@ -194,7 +194,7 @@ class BaseObjectType(type):
             #         raise TypeError(error_message)
 
             #     for key, value in user_defined_fields.items():
-            #         base_options.add_field(key, get_field_as(value, Field))
+            #         base_options.add_field(key, mount_type_as(value, Field))
 
             dataclass = make_dataclass(name, _dataclass_fields, bases=())
             setattr(klass, 'dataclass_model', dataclass)

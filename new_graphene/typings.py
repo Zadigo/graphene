@@ -11,17 +11,21 @@ if TYPE_CHECKING:
     from new_graphene.base import BaseOptions, BaseType
     from new_graphene.fields.arguments import Argument
     from new_graphene.fields.base import Field
+    from new_graphene.fields.dynamic import Dynamic
     from new_graphene.fields.helpers import ExplicitField, ImplicitField
     from new_graphene.fields.interface import Interface
     from new_graphene.fields.objecttypes import ObjectType
     from new_graphene.fields.scalars import Scalar
+    from new_graphene.fields.structures import Structure
     from new_graphene.schema import Schema
 
 type TypeAllTypes = str | int | float | bool | Sequence | MutableMapping | None
 
 type TypeScalar[T= TypeAllTypes] = Scalar[T]
 
-type TypeFieldType = ExplicitField | ImplicitField
+type TypeStructure = Structure
+
+type TypeFieldType = ExplicitField | ImplicitField | TypeStructure
 
 type TypeField = Field
 
@@ -42,6 +46,8 @@ type TypeInterface = Interface
 type TypeSchema = Schema
 
 type TypeArgument = Argument
+
+type TypeDynamic = Dynamic
 
 type TypeGrapheneTypes = Type[TypeObjectType |
                               TypeInterface | TypeScalar | TypeArgument]

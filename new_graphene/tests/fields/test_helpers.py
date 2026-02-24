@@ -2,9 +2,10 @@ import unittest
 
 from new_graphene.fields.base import Field
 from new_graphene.fields.helpers import (BaseField, ExplicitField,
-                                         ImplicitField, get_field_as,
-                                         inspect_type)
+                                         ImplicitField, inspect_type,
+                                         mount_type_as)
 from new_graphene.fields.scalars import String
+from new_graphene.fields.structures import NonNull
 
 
 def return_resolver_input(root, info, input):
@@ -77,7 +78,6 @@ class TestField(unittest.TestCase):
     def test_instance(self):
         instance = Field(String, description="A string field")
         self.assertIsNotNone(instance.description)
-        self.assertTrue(instance.creation_counter > 1)
         self.assertIsNone(instance.name)
 
     def test_all_arguments(self):
@@ -90,19 +90,23 @@ class TestField(unittest.TestCase):
             description="A test field",
             required=True,
             default_value="default",
-            extra_args={'extra': 'value'}
+            search=String()
         )
         self.assertIsNotNone(instance.description)
-        self.assertTrue(instance.creation_counter > 1)
         self.assertEqual(instance.name, "testField")
         self.assertTrue(callable(instance.resolver))
+        self.assertIn('search', instance._arguments)
         print(instance)
+
+    def test_required(self):
+        instance = Field(String, required=True)
+        self.assertIsInstance(instance.field_type, NonNull)
 
 
 class TestInspectType(unittest.TestCase):
     def test_implementation_with_string(self):
-        result = inspect_type('new_graphene.fields.helpers.get_field_as')
-        self.assertEqual(result, get_field_as)
+        result = inspect_type('new_graphene.fields.helpers.mount_type_as')
+        self.assertEqual(result, mount_type_as)
 
     def test_implementation_with_callable(self):
         result = inspect_type(lambda: 'Hello')
@@ -119,30 +123,28 @@ class TestInspectType(unittest.TestCase):
 
 class TestGetFieldAs(unittest.TestCase):
     def test_implementation_with_scalar(self):
-        result = get_field_as(String())
+        result = mount_type_as(String())
         self.assertIsInstance(result, String)
 
-        result = get_field_as(String(), mount_type=Field)
+        result = mount_type_as(String(), mount_type=Field)
         self.assertIsInstance(result, ExplicitField)
         self.assertIsInstance(result, Field)
 
     def test_with_type(self):
-        result = get_field_as(String)
+        result = mount_type_as(String)
         self.assertIsNone(result)
 
     def test_with_illicit_value(self):
-        result = get_field_as(123)
+        result = mount_type_as(123)
         self.assertIsNone(result)
 
     def test_implementation_with_field(self):
-        result = get_field_as(Field(String))
+        result = mount_type_as(Field(String))
         self.assertIsInstance(result, ExplicitField)
 
     def test_implementation_with_non_scalar(self):
         class CustomType:
             pass
 
-        result = get_field_as(CustomType())
-        self.assertIsNone(result)
-        self.assertIsNone(result)
+        result = mount_type_as(CustomType())
         self.assertIsNone(result)
