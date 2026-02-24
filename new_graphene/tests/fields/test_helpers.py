@@ -1,10 +1,10 @@
 import unittest
 
 from new_graphene.fields.base import Field
-from new_graphene.fields.datatypes import String
 from new_graphene.fields.helpers import (BaseField, ExplicitField,
                                          ImplicitField, get_field_as,
                                          inspect_type)
+from new_graphene.fields.scalars import String
 
 
 def return_resolver_input(root, info, input):

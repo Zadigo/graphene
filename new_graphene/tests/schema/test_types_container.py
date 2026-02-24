@@ -4,9 +4,9 @@ from graphql import GraphQLInt, GraphQLObjectType
 
 from new_graphene.fields.arguments import Argument
 from new_graphene.fields.base import Field
-from new_graphene.fields.datatypes import Integer, String
 from new_graphene.fields.interface import Interface
 from new_graphene.fields.objecttypes import ObjectType
+from new_graphene.fields.scalars import Integer, String
 from new_graphene.grapqltypes import GrapheneInterfaceType
 from new_graphene.schema import TypesContainer
 

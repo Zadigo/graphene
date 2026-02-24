@@ -2,7 +2,7 @@ import unittest
 
 from graphql import IntValueNode, Undefined
 
-from new_graphene.fields.datatypes import BigInteger, Integer
+from new_graphene.fields.scalars import BigInteger, Integer
 
 values = [
     2**31 - 1,  # Max 32-bit signed int

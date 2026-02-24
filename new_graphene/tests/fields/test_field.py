@@ -2,7 +2,7 @@ import unittest
 
 from new_graphene.fields.arguments import Argument
 from new_graphene.fields.base import Field
-from new_graphene.fields.datatypes import String
+from new_graphene.fields.scalars import String
 
 
 def return_resolver_input(root, info, input):

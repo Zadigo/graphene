@@ -1,7 +1,7 @@
 import unittest
 
 from new_graphene.fields.arguments import Argument
-from new_graphene.fields.datatypes import String
+from new_graphene.fields.scalars import String
 
 
 class TestArgument(unittest.TestCase):

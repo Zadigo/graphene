@@ -5,17 +5,18 @@ from typing import Any, Callable, Optional, Sequence, Type
 from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
                      GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
                      GraphQLNamedType, GraphQLObjectType, GraphQLResolveInfo,
-                     GraphQLSchema, GraphQLString, default_type_resolver, get_introspection_query)
+                     GraphQLSchema, GraphQLString, default_type_resolver,
+                     get_introspection_query)
 from graphql import graphql as agraphql
 from graphql import graphql_sync
 
 from new_graphene.exceptions import GrapheneObjectTypeError
-# from new_graphene.fields.datatypes import ID, Float, Integer, Scalar, String
-from new_graphene.fields.datatypes import Scalar
 from new_graphene.fields.dynamic import Dynamic
 from new_graphene.fields.interface import Interface
 from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.fields.resolvers import default_resolver
+# from new_graphene.fields.datatypes import ID, Float, Integer, Scalar, String
+from new_graphene.fields.scalars import Scalar
 from new_graphene.grapqltypes import (GrapheneGraphqlObjectType,
                                       GrapheneGraphqlScalarType,
                                       GrapheneInterfaceType)
@@ -496,4 +497,6 @@ class Schema(PrintingMixin):
         pass
 
     def asubscribe(self, query, *args, **kwargs):
+        pass
+        pass
         pass

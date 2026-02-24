@@ -2,9 +2,9 @@
 from faker import Faker
 
 from new_graphene.fields.base import Field
-from new_graphene.fields.datatypes import BigInteger, Boolean, Integer, String
 from new_graphene.fields.interface import Interface
 from new_graphene.fields.objecttypes import ObjectType
+from new_graphene.fields.scalars import BigInteger, Boolean, Integer, String
 from new_graphene.schema import Schema
 
 faker = Faker()

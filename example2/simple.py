@@ -2,8 +2,8 @@ from faker import Faker
 from graphql import GraphQLResolveInfo
 
 from new_graphene.fields.base import Field
-from new_graphene.fields.datatypes import ID, Integer, String
 from new_graphene.fields.objecttypes import ObjectType
+from new_graphene.fields.scalars import ID, Integer, String
 from new_graphene.schema import Schema
 
 faker = Faker()

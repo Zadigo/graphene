@@ -262,7 +262,7 @@ class Boolean(Scalar[bool]):
         if isinstance(node, BooleanValueNode):
             return node.value
         return Undefined
-    
+
     @staticmethod
     def parse_value(value):
         return bool(value)
