@@ -80,6 +80,30 @@ class TestTypesContainer(unittest.TestCase):
         )
         self.assertIsNone(result)
 
+    def test_get_field_resolver_with_interface(self):
+        class MyInterface(Interface):
+            name = String()
+
+            def resolve_name(self, info):
+                return "test"
+
+        class SimpleQuery(ObjectType):
+            name = String()
+
+            class Meta:
+                interfaces = [MyInterface]
+
+        instance = TypesContainer()
+        result = instance._get_field_resolver(
+            SimpleQuery,
+            "resolve_name",
+            "name",
+            None
+        )
+
+        self.assertIsNotNone(result)
+        self.assertTrue(callable(result))
+
     def test_get_field_resolver_success(self):
         class SimpleQuery(ObjectType):
             def resolve_test(self, info):

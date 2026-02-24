@@ -85,9 +85,10 @@ class TypesContainer(dict):
 
         return value
 
-    def _get_field_resolver(self, graphene_type: TypeObjectType, func_name: str, field_name: str, default_value: TypeAllTypes):
-        """Searches the resolve for the field on the ObjectTypes and
-        interfaces implemented by the ObjectType. The search is done in the following order:
+    def _get_field_resolver(self, graphene_type: Type[TypeObjectType], func_name: str, field_name: str, default_value: TypeAllTypes):
+        """Searches the resolve for the field on the ObjectTypes and interfaces implemented 
+        by the ObjectType. The search is done in the following order:
+
         1. The ObjectType itself
         2. The interfaces implemented by the ObjectType
 
@@ -103,23 +104,19 @@ class TypesContainer(dict):
         if not issubclass(graphene_type, ObjectType):
             return None
 
-        resolver = getattr(graphene_type, func_name, None)
+        _resolver = getattr(graphene_type, func_name, None)
 
-        if resolver is None:
-            interface_resolver = None
-            for interface in graphene_type._meta.interfaces:
-                if field_name not in interface._meta.fields:
-                    continue
+        interface_resolver = None
+        for interface in graphene_type._meta.interfaces:
+            if field_name not in interface._meta.fields:
+                continue
 
-                interface_resolver = getattr(interface, func_name, None)
-                if interface_resolver is not None:
-                    break
-            resolver = interface_resolver
-
-        if resolver is not None:
-            return get_unbound_function(resolver)
-
-        return None
+            interface_resolver = getattr(interface, func_name, None)
+            if interface_resolver is not None:
+                break
+        
+        resolver = _resolver or interface_resolver
+        return get_unbound_function(resolver)
 
     # create_fields_for_type
     def _create_fields(self, graphene_type: Type[TypeObjectType], is_input_field: bool = False):
@@ -292,7 +289,6 @@ class TypesContainer(dict):
             'ID': GraphQLID
         }
 
-        # TODO: Use "value.internal_type.value"
         if value._meta._class_name in scalars:
             return scalars[value._meta._class_name]
 
@@ -497,6 +493,4 @@ class Schema(PrintingMixin):
         pass
 
     def asubscribe(self, query, *args, **kwargs):
-        pass
-        pass
         pass

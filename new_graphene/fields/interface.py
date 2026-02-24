@@ -47,7 +47,6 @@ class Interface(BaseType):
         description (str): Description of the GraphQL type in the schema. Defaults to class docstring.
     """
 
-    is_interface_type = True  # TODO: Remove
     internal_type: ClassVar[ObjectTypesEnum] = ObjectTypesEnum.INTERFACE
 
     def __init__(self, *args, **kwargs):
