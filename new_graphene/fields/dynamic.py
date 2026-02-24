@@ -8,7 +8,7 @@ from new_graphene.fields.helpers import ImplicitField
 from new_graphene.typings import TypeScalar
 
 
-class Dynamic[S = TypeScalar](ImplicitField):
+class Dynamic[T = TypeScalar](ImplicitField):
     """A field that can be defined with a type that is not yet defined 
     at the time of field declaration. The type is resolved at runtime when 
     the schema is generated.
@@ -24,7 +24,7 @@ class Dynamic[S = TypeScalar](ImplicitField):
         with_schema (bool): Whether to pass the schema to the lazy_type callable when resolving the type. Default is False.
     """
 
-    def __init__(self, lazy_type: Callable[..., S] | Callable[[GraphQLSchema], S], with_schema: bool = False):
+    def __init__(self, lazy_type: Callable[..., T] | Callable[[GraphQLSchema], T], with_schema: bool = False):
         super().__init__()
 
         if not inspect.isfunction(lazy_type) and not isinstance(lazy_type, functools.partial):
@@ -33,7 +33,7 @@ class Dynamic[S = TypeScalar](ImplicitField):
         self.field_type = lazy_type
         self.with_schema = with_schema
 
-    def _get_type(self, schema: GraphQLSchema = None) -> S:
+    def _get_type(self, schema: GraphQLSchema = None) -> T:
         if schema is not None and self.with_schema:
             return self.field_type(schema=schema)
         return self.field_type()

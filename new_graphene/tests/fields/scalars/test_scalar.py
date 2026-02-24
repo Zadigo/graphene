@@ -23,7 +23,7 @@ class TestScalar(unittest.TestCase):
 
     def test_args_and_kwargs(self):
         instance = Scalar(
-            Integer(name='age'),
+            Argument(String),
             name=Argument(String)
         )
 

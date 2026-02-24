@@ -71,7 +71,7 @@ class Scalar[T= Any](ImplicitField):
         """
         return value
 
-    def _get_type(self) -> Type[Scalar]:
+    def _get_type(self) -> Type[Scalar[T]]:
         return self.__class__
 
 

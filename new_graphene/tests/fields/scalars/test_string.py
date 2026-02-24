@@ -2,8 +2,16 @@ import unittest
 
 from tests.global_utils import create_test_schema
 
+from new_graphene.fields.arguments import Argument
+from new_graphene.fields.scalars import String
+
 
 class TestString(unittest.TestCase):
+    def test_instance(self):
+        instance = String(Argument(String))
+        field_type = instance._get_type()
+        print(instance.args, instance.kwargs, field_type)
+
     def test_query(self):
         result = create_test_schema()
         self.assertIsNone(result.errors)
@@ -82,5 +90,9 @@ class TestString(unittest.TestCase):
     #     assert len(result.errors) == 1
     #     assert (
     #         result.errors[0].message
+    #         == "String cannot represent a non string value: true"
+    #     )
+    #         == "String cannot represent a non string value: true"
+    #     )
     #         == "String cannot represent a non string value: true"
     #     )

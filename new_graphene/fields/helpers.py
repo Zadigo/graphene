@@ -99,11 +99,11 @@ class BaseField(PrintingMixin):
     def __hash__(self) -> int:
         return hash(self.creation_counter)
 
-    # TODO: Rename: get_field_type
-    def _get_type(self) -> Type:  # TypeScalar ??
-        """Some fields might not have a type associated with them (e.g. ExplicitField),
-        so this method should be implemented by the subclasses that require it. If a field does 
-        not have a type, it should raise a NotImplementedError."""
+    @deprecated("This methods will be remaed to 'get_field_typ'")
+    def _get_type(self) -> TypeScalar | TypeObjectType:  # TypeScalar ??
+        """Some fields might not have a `field_type` associated with them (e.g. ExplicitField),
+        so this method should be implementedin order to return the underlying field type associated
+        with the field. If a field does not have a type, it should raise a NotImplementedError."""
         raise NotImplementedError
 
     @deprecated("This method will be removed in a future version.")
