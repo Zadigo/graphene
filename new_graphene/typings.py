@@ -33,7 +33,7 @@ type TypeImplicitField = ImplicitField
 
 type TypeBaseOptions = BaseOptions
 
-type TypeResolver[T = TypeAllTypes] = Callable[[str, GraphQLResolveInfo, str], T]
+type TypeResolver[T = TypeAllTypes] = Callable[[str, TypeAllTypes, GraphQLResolveInfo, dict[str, Any]], T]
 
 type TypeObjectType = ObjectType
 
