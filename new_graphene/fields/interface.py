@@ -1,10 +1,10 @@
 from typing import ClassVar
 
 from graphql import GraphQLResolveInfo
-from typings import TypeInterface
 
 from new_graphene.base import BaseType
 from new_graphene.fields.objecttypes import ObjectType
+from new_graphene.typings import TypeInterface
 from new_graphene.utils.base import ObjectTypesEnum
 
 

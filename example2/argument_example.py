@@ -31,7 +31,6 @@ schema = Schema(query=Query)
 query = """
     query {
       users(search: "Pauline") {
-        id
         firstname
         age
       }
@@ -47,6 +46,4 @@ def test_query():
 
 if __name__ == "__main__":
     result = schema.execute(query)
-    print(schema._types_container)
-    print(result)
-    # print(result.data["user"])
+    print(result.data)
