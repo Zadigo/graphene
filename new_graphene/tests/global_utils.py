@@ -1,0 +1,60 @@
+
+from faker import Faker
+
+from graphene.types.scalars import Boolean
+from new_graphene.fields.base import Field
+from new_graphene.fields.datatypes import BigInteger, Integer, String
+from new_graphene.fields.objecttypes import ObjectType
+from new_graphene.schema import Schema
+
+faker = Faker()
+
+
+def test_resolver(parent, info, _input):
+    print(parent, info, _input)
+    return _input
+
+
+def create_test_schema(query: str = None, immediate: bool = True):
+    class User(ObjectType):
+        firstname = String(input=String())
+        age = Integer(input=Integer())
+        followers = BigInteger(input=BigInteger())
+        isActive = Boolean(input=Boolean())
+
+        def resolve_optional(self, info):
+            print(info)
+            return None
+
+        def resolve_required(self, info, _input):
+            print(info, _input)
+            return _input
+
+    class Query(ObjectType):
+        user = Field(User)
+
+        def resolve_user(root, info):
+            return {
+                'firstname': faker.first_name(),
+                'age': faker.random_int(min=18, max=80),
+                'followers': faker.random_int(min=1000, max=1000000),
+                # 'isActive': faker.boolean()
+            }
+
+    schema = Schema(query=Query)
+
+    if query is None:
+        query = """
+        query {
+            user {
+                firstname
+                age
+                followers
+            }
+        }
+        """
+
+    if immediate:
+        return schema.execute(query)
+
+    return schema

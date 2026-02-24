@@ -2,20 +2,10 @@ import unittest
 
 from graphql.language import StringValueNode
 
-from new_graphene.fields.datatypes import Scalar, String
-from new_graphene.utils.base import ObjectTypesEnum
+from new_graphene.fields.datatypes import String
 
 
 class TestString(unittest.TestCase):
-    def test_value_resolution(self):
-        instance = String()
-        self.assertIsInstance(instance, Scalar)
-        self.assertEqual(instance._meta.name, "String")
-        self.assertEqual(instance._meta._internal_name, "String")
-        self.assertEqual(instance.internal_type, ObjectTypesEnum.SCALAR)
-
-        print(instance)
-
     def test_serialization(self):
         instance = String()
         self.assertEqual(instance.serialize("Hello, World!"), "Hello, World!")

@@ -234,7 +234,7 @@ class String(Scalar[str]):
         if isinstance(node, StringValueNode):
             return node.value
         return Undefined
-    
+
     @staticmethod
     def parse_value(value):
         if isinstance(value, bool):
@@ -254,10 +254,18 @@ class Boolean(Scalar[bool]):
     """
 
     @staticmethod
+    def serialize(value):
+        return bool(value)
+
+    @staticmethod
     def parse_literal(node, variables=None):
         if isinstance(node, BooleanValueNode):
             return node.value
         return Undefined
+    
+    @staticmethod
+    def parse_value(value):
+        return bool(value)
 
 
 class ID(Scalar[str]):

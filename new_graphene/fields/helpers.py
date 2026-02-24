@@ -35,6 +35,7 @@ class BaseFieldOptions:
     def __init__(self, name: str, cls: TypeFieldType):
         self.cls = cls
         self.name: str = None
+        self.description: Optional[str] = None
         self._internal_name: str = None
         self._class_name: str = name
 
