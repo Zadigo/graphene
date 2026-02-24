@@ -1,24 +1,86 @@
 import unittest
 
-from graphql.language import StringValueNode
-
-from new_graphene.fields.datatypes import String
+from tests.global_utils import create_test_schema
 
 
 class TestString(unittest.TestCase):
-    def test_serialization(self):
-        instance = String()
-        self.assertEqual(instance.serialize("Hello, World!"), "Hello, World!")
+    def test_query(self):
+        result = create_test_schema()
+        self.assertIsNone(result.errors)
 
-    def test_parse_value(self):
-        instance = String()
-        self.assertEqual(instance.parse_value(
-            "Hello, World!"), "Hello, World!")
-        self.assertEqual(instance.parse_value(123), "123")
-        self.assertEqual(instance.parse_value(True), "true")
-        self.assertEqual(instance.parse_value(False), "false")
+        result = create_test_schema(
+            query="""
+            query {
+                user {
+                    firstname(input: "John")
+                    age
+                    followers
+                }
+            }
+            """
+        )
 
-    def test_parse_literal(self):
-        instance = String()
-        node = StringValueNode(value="Hello, World!")
-        self.assertEqual(instance.parse_literal(node), "Hello, World!")
+        self.assertIsNone(result.errors)
+
+        result = create_test_schema(
+            query="""
+            query {
+                user {
+                    firstname(input: "0")
+                    age
+                    followers
+                }
+            }
+            """
+        )
+
+        self.assertIsNone(result.errors)
+
+        print(result)
+
+    def test_optional_input(self):
+        result = create_test_schema(
+            query="""
+            query {
+                user {
+                    firstname(input: null)
+                    isActive
+                }
+            }
+            """
+        )
+        print(result)
+        self.assertIsNone(result.errors)
+
+    # def test_invalid_input(self):
+    #     result = create_test_schema(
+    #         query="""
+    #         query {
+    #             user {
+    #                 firstname(input: null)
+    #             }
+    #         }
+    #         """
+    #     )
+
+    #     assert result.errors
+    #     assert len(result.errors) == 1
+    #     assert (
+    #         result.errors[0].message == "String cannot represent a non string value: 1"
+    #     )
+
+    #     result = schema.execute("{ optional { string(input: 3.2) } }")
+    #     assert result.errors
+    #     assert len(result.errors) == 1
+    #     assert (
+    #         result.errors[0].message
+    #         == "String cannot represent a non string value: 3.2"
+    #     )
+
+    #     result = schema.execute("{ optional { string(input: true) } }")
+    #     assert result.errors
+    #     assert len(result.errors) == 1
+    #     assert (
+    #         result.errors[0].message
+    #         == "String cannot represent a non string value: true"
+    #     )

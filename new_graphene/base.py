@@ -145,6 +145,9 @@ class BaseObjectType(type):
         from new_graphene.fields.base import Field
 
         if internal_type == ObjectTypesEnum.OBJECT_TYPE:
+            if bases[-1] == BaseType:
+                return klass
+
             filtered_fields = base_options.filter_fields(namespace)
 
             # Add the fields of the interface on the ObjectType

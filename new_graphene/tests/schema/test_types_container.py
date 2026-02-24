@@ -195,3 +195,8 @@ class TestTypesContainer(unittest.TestCase):
         self.assertIn('Age', result)
 
         print(result)
+
+    def test_camelcase(self):
+        instance = TypesContainer()
+        value = instance._get_name('test_name')
+        self.assertEqual(value, 'testName')

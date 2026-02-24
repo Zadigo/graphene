@@ -58,8 +58,11 @@ class TypesContainer(dict):
         self.types = types or []
 
     def _get_name(self, name: str) -> str:
-        # if self.auto_camelcase:
-        #     return ''.join(word.capitalize() for word in name.split('_'))
+        if self.auto_camelcase:
+            components = name.split("_")
+            # We capitalize the first letter of each component except the first one
+            # with the 'capitalize' method and join them together.
+            return components[0] + "".join(x.capitalize() if x else "_" for x in components[1:])
         return name
 
     def _check_types(self, value: Any):
@@ -139,7 +142,7 @@ class TypesContainer(dict):
                 pass
 
             input_or_output_type = self.add_to_self(field_obj.field_type)
-            
+
             if is_input_field:
                 _final_field = GraphQLInputField(
                     input_or_output_type,

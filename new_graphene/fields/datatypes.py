@@ -134,7 +134,7 @@ class Integer(Scalar[int]):
         return Undefined
 
     @staticmethod
-    def resolve_value(value):
+    def parse_value(value):
         try:
             value = int(value)
         except ValueError:
@@ -169,7 +169,7 @@ class BigInteger(Scalar[int]):
         return Undefined
 
     @staticmethod
-    def resolve_value(value):
+    def parse_value(value):
         _value = Undefined
 
         try:
@@ -305,7 +305,7 @@ class Date(Scalar[str]):
         return Undefined
 
     @staticmethod
-    def resolve_value(value):
+    def parse_value(value):
         if isinstance(value, datetime.date):
             return value
 
@@ -340,7 +340,7 @@ class DateTime(Scalar[str]):
         return Undefined
 
     @staticmethod
-    def resolve_value(value):
+    def parse_value(value):
         if isinstance(value, (datetime.datetime, datetime.date)):
             return value
 
@@ -376,7 +376,7 @@ class Time(Scalar[str]):
         return Undefined
 
     @staticmethod
-    def resolve_value(value):
+    def parse_value(value):
         if isinstance(value, datetime.time):
             return value
 
@@ -420,7 +420,7 @@ class Decimal(Scalar[str]):
         return Undefined
 
     @staticmethod
-    def resolve_value(value):
+    def parse_value(value):
         try:
             return PythonDecimal(value)
         except Exception:
