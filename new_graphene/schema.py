@@ -5,7 +5,7 @@ from typing import Any, Callable, Optional, Sequence, Type
 from graphql import (GraphQLArgument, GraphQLBoolean, GraphQLField,
                      GraphQLFloat, GraphQLID, GraphQLInputField, GraphQLInt,
                      GraphQLNamedType, GraphQLObjectType, GraphQLResolveInfo,
-                     GraphQLSchema, GraphQLString, get_introspection_query)
+                     GraphQLSchema, GraphQLString, default_type_resolver, get_introspection_query)
 from graphql import graphql as agraphql
 from graphql import graphql_sync
 
@@ -17,10 +17,12 @@ from new_graphene.fields.interface import Interface
 from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.fields.resolvers import default_resolver
 from new_graphene.grapqltypes import (GrapheneGraphqlObjectType,
-                                      GrapheneGraphqlScalarType)
+                                      GrapheneGraphqlScalarType,
+                                      GrapheneInterfaceType)
 from new_graphene.typings import (TypeAllTypes, TypeGrapheneTypes,
                                   TypeGraphqlExecuteOptions, TypeGraphQlTypes,
-                                  TypeObjectType, TypeResolver, TypeScalar)
+                                  TypeInterface, TypeObjectType, TypeResolver,
+                                  TypeScalar)
 from new_graphene.utils.base import get_unbound_function
 from new_graphene.utils.printing import PrintingMixin
 
@@ -212,8 +214,15 @@ class TypesContainer(dict):
 
         return _final_fields
 
-    def _resolve_type(self, resolve_type_func, type_name, root, info, _type):
-        pass
+    # resolve_type
+    def _interface_union_resolver(self, func: Callable, name: str, root: Any, info: GraphQLResolveInfo, field_type):
+        type_result = func(root, info)
+
+        if inspect.isclass(type_result) and issubclass(type_result, ObjectType):
+            return type_result._meta.name
+
+        return_type = self[name]
+        return default_type_resolver(root, info, return_type)
 
     def get(self, key: str, default: Any = None) -> Optional[TypeGraphQlTypes]:
         return super().get(key, default)
@@ -256,7 +265,7 @@ class TypesContainer(dict):
         elif issubclass(graphene_type, ObjectType):
             graphql_type = self.translate_objecttype(graphene_type)
         elif issubclass(graphene_type, Interface):
-            graphene_type = None
+            graphql_type = self.translate_interface(graphene_type)
         # elif issubclass(graphene_type, Union):
         #     pass
         # elif issubclass(graphene_type, Enum):
@@ -321,8 +330,33 @@ class TypesContainer(dict):
     def translate_union(self, graphene_type: TypeObjectType):
         pass
 
-    def translate_interface(self, graphene_type: TypeObjectType):
-        pass
+    def translate_interface(self, graphene_type: TypeInterface):
+        resolve_type = None
+
+        if graphene_type.resolve_type is not None:
+            resolve_type = functools.partial(
+                self._interface_union_resolver,
+                graphene_type.resolve_type,
+                graphene_type._meta.name
+            )
+
+        def interfaces():
+            interfaces = []
+            for graphene_interface in graphene_type._meta.interfaces:
+                interface = self.add_type(graphene_interface)
+                # assert interface.graphene_type == graphene_interface
+                interfaces.append(interface)
+            return interfaces
+
+        fields = functools.partial(self._create_fields, graphene_type)
+        return GrapheneInterfaceType(
+            graphene_type._meta.name,
+            graphene_type,
+            description=graphene_type._meta.description,
+            fields=fields,
+            interfaces=interfaces,
+            resolve_type=resolve_type
+        )
 
     def translate_enum(self, graphene_type: TypeObjectType):
         pass
@@ -454,6 +488,12 @@ class Schema(PrintingMixin):
         """
         normalized_kwargs = self._normalize_kwargs(**kwargs)
         return agraphql(self.graphql_schema, *args, **normalized_kwargs)
+
+    def asubscribe(self, query, *args, **kwargs):
+        pass
+
+    def asubscribe(self, query, *args, **kwargs):
+        pass
 
     def asubscribe(self, query, *args, **kwargs):
         pass

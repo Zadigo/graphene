@@ -1,6 +1,10 @@
 from typing import ClassVar
 
+from graphql import GraphQLResolveInfo
+from typings import TypeInterface
+
 from new_graphene.base import BaseType
+from new_graphene.fields.objecttypes import ObjectType
 from new_graphene.utils.base import ObjectTypesEnum
 
 
@@ -48,3 +52,9 @@ class Interface(BaseType):
 
     def __init__(self, *args, **kwargs):
         raise TypeError("Interfaces cannot be instantiated directly.")
+
+    @classmethod
+    def resolve_type(cls, instance: TypeInterface, info: GraphQLResolveInfo):
+        if isinstance(instance, ObjectType):
+            return type(instance)
+        return None

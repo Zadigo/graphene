@@ -7,6 +7,7 @@ from new_graphene.fields.base import Field
 from new_graphene.fields.datatypes import Integer, String
 from new_graphene.fields.interface import Interface
 from new_graphene.fields.objecttypes import ObjectType
+from new_graphene.grapqltypes import GrapheneInterfaceType
 from new_graphene.schema import TypesContainer
 
 
@@ -195,6 +196,16 @@ class TestTypesContainer(unittest.TestCase):
         self.assertIn('Age', result)
 
         print(result)
+
+    def test_translate_interface(self):
+        instance = TypesContainer()
+
+        class MyInterface(Interface):
+            name = String()
+
+        result = instance.translate_interface(MyInterface)
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, GrapheneInterfaceType)
 
     def test_camelcase(self):
         instance = TypesContainer()
