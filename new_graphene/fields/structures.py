@@ -5,7 +5,7 @@ from new_graphene.typings import TypeArgument, TypeObjectType, TypeScalar
 
 
 class Structure[T = TypeScalar | TypeObjectType](ImplicitField):
-    """Wrap a type within a structure. This is used for `List` and `NonNull` types, 
+    """Wraps a type within a structure. This is used for `List` and `NonNull` types, 
     which are wrappers around other types to indicate that they are lists 
     or non-nullable
     """
@@ -34,7 +34,7 @@ class List(Structure):
 
     .. code:: python
 
-        from new_graphene import NonNull, String, ObjectType
+        from new_graphene import String, ObjectType
 
         class Cars(ObjectType):
             firstname = List(String) # Field will be a list of strings

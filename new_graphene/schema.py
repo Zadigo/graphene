@@ -46,7 +46,13 @@ class TypesContainer(dict):
         auto_camelcase (bool, optional): Whether to automatically convert field names to camel case. Defaults to True.
     """
 
-    def __init__(self, query: Optional[Type[TypeObjectType]] = None, mutation: Optional[Type[TypeObjectType]] = None, subscription: Optional[Type[TypeObjectType]] = None, types: Optional[Sequence[Type[TypeObjectType]]] = None, auto_camelcase: bool = True):
+    def __init__(
+        self, query: Optional[Type[TypeObjectType]] = None, 
+        mutation: Optional[Type[TypeObjectType]] = None, 
+        subscription: Optional[Type[TypeObjectType]] = None, 
+        types: Optional[Sequence[Type[TypeObjectType]]] = None, 
+        auto_camelcase: bool = True
+    ):
         self.auto_camelcase = auto_camelcase
 
         _query = self._check_is_type_class(query)
@@ -402,7 +408,15 @@ class Schema(PrintingMixin):
         auto_camelcase (bool, optional): Whether to automatically convert field names to camel case. Defaults to True.
     """
 
-    def __init__(self, query: Optional[Type[TypeObjectType]] = None, mutation: Optional[Type[TypeObjectType]] = None, subscription: Optional[Type[TypeObjectType]] = None, types: Optional[Sequence[Type[TypeObjectType]]] = None, directives: Optional[Sequence] = None, auto_camelcase: bool = True):
+    def __init__(
+        self, 
+        query: Optional[Type[TypeObjectType]] = None, 
+        mutation: Optional[Type[TypeObjectType]] = None, 
+        subscription: Optional[Type[TypeObjectType]] = None, 
+        types: Optional[Sequence[Type[TypeObjectType]]] = None, 
+        directives: Optional[Sequence] = None, 
+        auto_camelcase: bool = True
+    ):
         self.query = query
         self.mutation = mutation
         self.subscription = subscription

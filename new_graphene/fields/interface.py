@@ -42,9 +42,12 @@ class Interface(BaseType):
             name = String()
 
 
-    Meta class options (optional):
-        name (str): Name of the GraphQL type (must be unique in schema). Defaults to class name.
-        description (str): Description of the GraphQL type in the schema. Defaults to class docstring.
+    # Meta class options
+
+    .. rubric:: Options
+
+        * name (str): Name of the GraphQL type (must be unique in schema). Defaults to class name.
+        * description (str): Description of the GraphQL type in the schema. Defaults to class docstring.
     """
 
     internal_type: ClassVar[ObjectTypesEnum] = ObjectTypesEnum.INTERFACE

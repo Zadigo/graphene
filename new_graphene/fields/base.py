@@ -26,7 +26,7 @@ class Field[F = type[TypeScalar | TypeObjectType]](ExplicitField):
 
     Args:
         field_type (TypeScalar): The type of the field in the GraphQL schema. This can be a scalar type, an object type, an enum, an interface, or a union.
-        args (MutableMapping[str, Any], optional): Arguments that can be input to the field. Prefer to use ``**extra_args``, unless you use an argument name that clashes with one of the Field arguments presented here (see :ref:`example<ResolverParamGraphQLArguments>`).
+        args (MutableMapping[str, Any], optional): Arguments that can be input to the field. Prefer to use `**extra_args`, unless you use an argument name that clashes with one of the Field arguments presented here (see :ref:`example<ResolverParamGraphQLArguments>`).
         resolver (Callable, optional): A function to get the value for a Field from the parent value object. If not set, the default resolver method for the schema is used.
         source (str, optional): Attribute name to resolve for this field from the parent value object. Alternative to resolver (cannot set both source and resolver).
         deprecation_reason (str, optional): Setting this value indicates that the field is depreciated and may provide instruction or reason on how for clients to proceed.
